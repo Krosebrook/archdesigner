@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   ArrowLeft, Plus, Network, List, Sparkles, Zap, FileText, BookOpen,
-  Code2, FileCode2, DollarSign, Package, GitBranch, Layers
+  Code2, FileCode2, DollarSign, Package, GitBranch, Layers, Workflow, Cpu, Wand2
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -28,6 +28,9 @@ import CostOptimizer from "../components/project-detail/CostOptimizer";
 import DependencyManager from "../components/project-detail/DependencyManager";
 import CICDGenerator from "../components/project-detail/CICDGenerator";
 import ProjectTemplateGallery from "../components/project-detail/ProjectTemplateGallery";
+import ArchitectureRefiner from "../components/project-detail/ArchitectureRefiner";
+import CICDIntelligence from "../components/project-detail/CICDIntelligence";
+import TemplateCreator from "../components/project-detail/TemplateCreator";
 
 export default function ProjectDetail() {
   const location = useLocation();
@@ -205,21 +208,24 @@ export default function ProjectDetail() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <div className="overflow-x-auto pb-2">
-            <TabsList className="inline-flex w-auto min-w-full">
+            <TabsList className="inline-flex w-auto min-w-full gap-1">
               <TabsTrigger value="visual"><Network className="w-4 h-4 mr-1" />Visual</TabsTrigger>
               <TabsTrigger value="list"><List className="w-4 h-4 mr-1" />Services</TabsTrigger>
               <TabsTrigger value="validate"><Sparkles className="w-4 h-4 mr-1" />Validate</TabsTrigger>
-              <TabsTrigger value="dependencies"><Network className="w-4 h-4 mr-1" />Dependencies</TabsTrigger>
+              <TabsTrigger value="dependencies"><Network className="w-4 h-4 mr-1" />Graph</TabsTrigger>
               <TabsTrigger value="refactor"><Sparkles className="w-4 h-4 mr-1" />Refactor</TabsTrigger>
-              <TabsTrigger value="performance"><Zap className="w-4 h-4 mr-1" />Performance</TabsTrigger>
+              <TabsTrigger value="performance"><Zap className="w-4 h-4 mr-1" />Perf</TabsTrigger>
               <TabsTrigger value="documentation"><FileText className="w-4 h-4 mr-1" />Docs</TabsTrigger>
               <TabsTrigger value="rules"><BookOpen className="w-4 h-4 mr-1" />Rules</TabsTrigger>
-              <TabsTrigger value="code-review"><Code2 className="w-4 h-4 mr-1" />Code Review</TabsTrigger>
-              <TabsTrigger value="api-gen"><FileCode2 className="w-4 h-4 mr-1" />API Gen</TabsTrigger>
+              <TabsTrigger value="code-review"><Code2 className="w-4 h-4 mr-1" />Review</TabsTrigger>
+              <TabsTrigger value="api-gen"><FileCode2 className="w-4 h-4 mr-1" />API</TabsTrigger>
               <TabsTrigger value="cost"><DollarSign className="w-4 h-4 mr-1" />Cost</TabsTrigger>
               <TabsTrigger value="deps"><Package className="w-4 h-4 mr-1" />Deps</TabsTrigger>
               <TabsTrigger value="cicd"><GitBranch className="w-4 h-4 mr-1" />CI/CD</TabsTrigger>
-              <TabsTrigger value="templates"><Layers className="w-4 h-4 mr-1" />Templates</TabsTrigger>
+              <TabsTrigger value="templates"><Layers className="w-4 h-4 mr-1" />Browse</TabsTrigger>
+              <TabsTrigger value="arch-refine"><Cpu className="w-4 h-4 mr-1" />Refine</TabsTrigger>
+              <TabsTrigger value="cicd-intel"><Workflow className="w-4 h-4 mr-1" />Intel</TabsTrigger>
+              <TabsTrigger value="create-template"><Wand2 className="w-4 h-4 mr-1" />Create</TabsTrigger>
             </TabsList>
           </div>
 
@@ -236,7 +242,10 @@ export default function ProjectDetail() {
           <TabsContent value="cost"><CostOptimizer project={project} services={services} /></TabsContent>
           <TabsContent value="deps"><DependencyManager project={project} services={services} /></TabsContent>
           <TabsContent value="cicd"><CICDGenerator project={project} services={services} /></TabsContent>
-          <TabsContent value="templates"><ProjectTemplateGallery onApplyTemplate={(t) => console.log('Apply template', t)} /></TabsContent>
+          <TabsContent value="templates"><ProjectTemplateGallery onApplyTemplate={(t) => console.log('Apply', t)} /></TabsContent>
+          <TabsContent value="arch-refine"><ArchitectureRefiner project={project} services={services} /></TabsContent>
+          <TabsContent value="cicd-intel"><CICDIntelligence project={project} services={services} /></TabsContent>
+          <TabsContent value="create-template"><TemplateCreator project={project} services={services} /></TabsContent>
         </Tabs>
 
         <AddServiceModal isOpen={showAddService} onClose={() => setShowAddService(false)} onSubmit={handleAddService} existingServices={services} />
