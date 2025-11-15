@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   ArrowLeft, Plus, Network, List, Sparkles, Zap, FileText, BookOpen,
-  Code2, FileCode2, DollarSign, Package, GitBranch, Layers, Workflow, Cpu, Wand2
+  Code2, FileCode2, DollarSign, Package, GitBranch, Layers, Workflow, Cpu, Wand2,
+  Code, Users, Settings
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -31,6 +32,9 @@ import ProjectTemplateGallery from "../components/project-detail/ProjectTemplate
 import ArchitectureRefiner from "../components/project-detail/ArchitectureRefiner";
 import CICDIntelligence from "../components/project-detail/CICDIntelligence";
 import TemplateCreator from "../components/project-detail/TemplateCreator";
+import CodeGenerator from "../components/project-detail/CodeGenerator";
+import CollaborationHub from "../components/project-detail/CollaborationHub";
+import TemplateManager from "../components/project-detail/TemplateManager";
 
 export default function ProjectDetail() {
   const location = useLocation();
@@ -159,11 +163,7 @@ export default function ProjectDetail() {
   return (
     <div className="p-6 md:p-8">
       <div className="max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <Link to={createPageUrl("Projects")}>
             <Button variant="ghost" className="mb-4">
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -187,18 +187,11 @@ export default function ProjectDetail() {
               </div>
             </div>
             <div className="flex gap-2">
-              <Button
-                onClick={() => setShowTemplates(true)}
-                variant="outline"
-                className="border-blue-200 hover:bg-blue-50"
-              >
+              <Button onClick={() => setShowTemplates(true)} variant="outline" className="border-blue-200 hover:bg-blue-50">
                 <Sparkles className="w-4 h-4 mr-2" />
                 Templates
               </Button>
-              <Button
-                onClick={() => setShowAddService(true)}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white"
-              >
+              <Button onClick={() => setShowAddService(true)} className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Service
               </Button>
@@ -208,24 +201,21 @@ export default function ProjectDetail() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <div className="overflow-x-auto pb-2">
-            <TabsList className="inline-flex w-auto min-w-full gap-1">
+            <TabsList className="inline-flex w-auto min-w-full gap-1 flex-wrap">
               <TabsTrigger value="visual"><Network className="w-4 h-4 mr-1" />Visual</TabsTrigger>
               <TabsTrigger value="list"><List className="w-4 h-4 mr-1" />Services</TabsTrigger>
               <TabsTrigger value="validate"><Sparkles className="w-4 h-4 mr-1" />Validate</TabsTrigger>
               <TabsTrigger value="dependencies"><Network className="w-4 h-4 mr-1" />Graph</TabsTrigger>
               <TabsTrigger value="refactor"><Sparkles className="w-4 h-4 mr-1" />Refactor</TabsTrigger>
-              <TabsTrigger value="performance"><Zap className="w-4 h-4 mr-1" />Perf</TabsTrigger>
               <TabsTrigger value="documentation"><FileText className="w-4 h-4 mr-1" />Docs</TabsTrigger>
-              <TabsTrigger value="rules"><BookOpen className="w-4 h-4 mr-1" />Rules</TabsTrigger>
               <TabsTrigger value="code-review"><Code2 className="w-4 h-4 mr-1" />Review</TabsTrigger>
               <TabsTrigger value="api-gen"><FileCode2 className="w-4 h-4 mr-1" />API</TabsTrigger>
               <TabsTrigger value="cost"><DollarSign className="w-4 h-4 mr-1" />Cost</TabsTrigger>
-              <TabsTrigger value="deps"><Package className="w-4 h-4 mr-1" />Deps</TabsTrigger>
               <TabsTrigger value="cicd"><GitBranch className="w-4 h-4 mr-1" />CI/CD</TabsTrigger>
-              <TabsTrigger value="templates"><Layers className="w-4 h-4 mr-1" />Browse</TabsTrigger>
               <TabsTrigger value="arch-refine"><Cpu className="w-4 h-4 mr-1" />Refine</TabsTrigger>
-              <TabsTrigger value="cicd-intel"><Workflow className="w-4 h-4 mr-1" />Intel</TabsTrigger>
-              <TabsTrigger value="create-template"><Wand2 className="w-4 h-4 mr-1" />Create</TabsTrigger>
+              <TabsTrigger value="code-gen"><Code className="w-4 h-4 mr-1" />Generate</TabsTrigger>
+              <TabsTrigger value="collab"><Users className="w-4 h-4 mr-1" />Collab</TabsTrigger>
+              <TabsTrigger value="template-mgmt"><Settings className="w-4 h-4 mr-1" />Manage</TabsTrigger>
             </TabsList>
           </div>
 
@@ -234,18 +224,15 @@ export default function ProjectDetail() {
           <TabsContent value="validate"><AIValidator project={project} services={services} /></TabsContent>
           <TabsContent value="dependencies"><DependencyVisualizer project={project} services={services} /></TabsContent>
           <TabsContent value="refactor"><AIRefactor project={project} services={services} /></TabsContent>
-          <TabsContent value="performance"><PerformanceMonitor project={project} /></TabsContent>
           <TabsContent value="documentation"><AIDocGenerator project={project} services={services} /></TabsContent>
-          <TabsContent value="rules"><RuleManagement project={project} /></TabsContent>
           <TabsContent value="code-review"><AICodeReview project={project} services={services} /></TabsContent>
           <TabsContent value="api-gen"><APIGenerator project={project} services={services} /></TabsContent>
           <TabsContent value="cost"><CostOptimizer project={project} services={services} /></TabsContent>
-          <TabsContent value="deps"><DependencyManager project={project} services={services} /></TabsContent>
           <TabsContent value="cicd"><CICDGenerator project={project} services={services} /></TabsContent>
-          <TabsContent value="templates"><ProjectTemplateGallery onApplyTemplate={(t) => console.log('Apply', t)} /></TabsContent>
           <TabsContent value="arch-refine"><ArchitectureRefiner project={project} services={services} /></TabsContent>
-          <TabsContent value="cicd-intel"><CICDIntelligence project={project} services={services} /></TabsContent>
-          <TabsContent value="create-template"><TemplateCreator project={project} services={services} /></TabsContent>
+          <TabsContent value="code-gen"><CodeGenerator project={project} services={services} /></TabsContent>
+          <TabsContent value="collab"><CollaborationHub project={project} /></TabsContent>
+          <TabsContent value="template-mgmt"><TemplateManager /></TabsContent>
         </Tabs>
 
         <AddServiceModal isOpen={showAddService} onClose={() => setShowAddService(false)} onSubmit={handleAddService} existingServices={services} />
