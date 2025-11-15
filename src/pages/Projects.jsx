@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Project } from "@/entities/all";
+import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Plus, Search, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -24,7 +24,7 @@ export default function ProjectsPage() {
   const loadProjects = async () => {
     setIsLoading(true);
     try {
-      const data = await Project.list('-created_date');
+      const data = await base44.entities.Project.list('-created_date');
       setProjects(data);
     } catch (error) {
       console.error("Error loading projects:", error);
@@ -34,7 +34,45 @@ export default function ProjectsPage() {
 
   const handleCreateProject = async (projectData) => {
     try {
-      await Project.create(projectData);
+      const { selectedTemplates, ...projectFields } = projectData;
+      
+      // Create project
+      const newProject = await base44.entities.Project.create(projectFields);
+      
+      // If templates were selected, create services from them
+      if (selectedTemplates && selectedTemplates.length > 0) {
+        const templates = await base44.entities.ServiceTemplate.list();
+        const selectedTemplateData = templates.filter(t => selectedTemplates.includes(t.id));
+        
+        const servicePromises = selectedTemplateData.map(template =>
+          base44.entities.Service.create({
+            project_id: newProject.id,
+            name: template.name,
+            description: template.description,
+            icon: template.icon,
+            category: template.category,
+            technologies: template.default_technologies,
+            apis: template.default_apis,
+            position: { x: Math.random() * 400 + 100, y: Math.random() * 300 + 100 }
+          })
+        );
+        
+        await Promise.all(servicePromises);
+        
+        // Update template usage counts
+        const updatePromises = selectedTemplateData.map(template =>
+          base44.entities.ServiceTemplate.update(template.id, {
+            usage_count: (template.usage_count || 0) + 1
+          })
+        );
+        await Promise.all(updatePromises);
+        
+        // Update project service count
+        await base44.entities.Project.update(newProject.id, {
+          services_count: selectedTemplates.length
+        });
+      }
+      
       setShowCreateModal(false);
       loadProjects();
     } catch (error) {
