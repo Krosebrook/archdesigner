@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { base44 } from "@/api/base44Client";
 import {
   Dialog,
   DialogContent,
@@ -10,7 +11,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
+import { Sparkles, Loader2, RefreshCw, TrendingUp } from "lucide-react";
 
 const categories = [
   { value: "desktop", label: "Desktop Application", icon: "🖥️" },
@@ -42,6 +46,179 @@ export default function CreateProjectModal({ isOpen, onClose, onSubmit }) {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGeneratingName, setIsGeneratingName] = useState(false);
+  const [isGeneratingMetrics, setIsGeneratingMetrics] = useState(false);
+  const [isSuggestingCategory, setIsSuggestingCategory] = useState(false);
+  const [topCategories, setTopCategories] = useState([]);
+  const [topTemplates, setTopTemplates] = useState([]);
+  const [suggestedServices, setSuggestedServices] = useState([]);
+  const [selectedTemplates, setSelectedTemplates] = useState([]);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadTopData();
+    }
+  }, [isOpen]);
+
+  const loadTopData = async () => {
+    try {
+      // Load all projects to find top categories
+      const projects = await base44.entities.Project.list();
+      const categoryCounts = {};
+      projects.forEach(p => {
+        categoryCounts[p.category] = (categoryCounts[p.category] || 0) + 1;
+      });
+      const sortedCategories = Object.entries(categoryCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([cat]) => cat);
+      setTopCategories(sortedCategories);
+
+      // Load top service templates
+      const templates = await base44.entities.ServiceTemplate.list();
+      const sortedTemplates = templates.sort((a, b) => (b.usage_count || 0) - (a.usage_count || 0)).slice(0, 10);
+      setTopTemplates(sortedTemplates);
+    } catch (error) {
+      console.error("Error loading top data:", error);
+    }
+  };
+
+  const generateNameAndDescription = async () => {
+    if (!formData.category) {
+      alert("Please select a category first");
+      return;
+    }
+
+    setIsGeneratingName(true);
+    try {
+      const categoryLabel = categories.find(c => c.value === formData.category)?.label || formData.category;
+      
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Generate a creative, professional project name and a 2-3 sentence description for a ${categoryLabel} microservices architecture project. Be specific and technical. Return as JSON with 'name' and 'description' fields.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            name: { type: "string" },
+            description: { type: "string" }
+          }
+        }
+      });
+
+      setFormData(prev => ({
+        ...prev,
+        name: result.name,
+        description: result.description
+      }));
+    } catch (error) {
+      console.error("Error generating name:", error);
+    }
+    setIsGeneratingName(false);
+  };
+
+  const suggestCategoryAndIcon = async () => {
+    if (!formData.name && !formData.description) {
+      alert("Please enter a project name or description first");
+      return;
+    }
+
+    setIsSuggestingCategory(true);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Given the project name "${formData.name}" and description "${formData.description}", suggest the most appropriate category from [desktop, mobile, web, enterprise, ai, platform] and a fitting emoji icon. Return as JSON with 'category' and 'icon' fields.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            category: { type: "string" },
+            icon: { type: "string" }
+          }
+        }
+      });
+
+      setFormData(prev => ({
+        ...prev,
+        category: result.category,
+        icon: result.icon
+      }));
+    } catch (error) {
+      console.error("Error suggesting category:", error);
+    }
+    setIsSuggestingCategory(false);
+  };
+
+  const predictMetrics = async () => {
+    if (!formData.category || !formData.description) {
+      alert("Please select a category and enter a description first");
+      return;
+    }
+
+    setIsGeneratingMetrics(true);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `For a ${formData.category} project described as "${formData.description}", predict reasonable initial counts for services, integrations, databases, and ai_models. Be realistic. Return as JSON with numeric fields.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            services_count: { type: "number" },
+            integrations_count: { type: "number" },
+            databases_count: { type: "number" },
+            ai_models_count: { type: "number" }
+          }
+        }
+      });
+
+      setFormData(prev => ({
+        ...prev,
+        services_count: result.services_count || 0,
+        integrations_count: result.integrations_count || 0,
+        databases_count: result.databases_count || 0,
+        ai_models_count: result.ai_models_count || 0
+      }));
+
+      // Also suggest initial services
+      await suggestInitialServices();
+    } catch (error) {
+      console.error("Error predicting metrics:", error);
+    }
+    setIsGeneratingMetrics(false);
+  };
+
+  const suggestInitialServices = async () => {
+    if (!formData.category || !formData.description) return;
+
+    try {
+      const templateNames = topTemplates.map(t => t.name).join(', ');
+      
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `For a ${formData.category} project: "${formData.description}", suggest 3-5 essential microservices. Available templates: ${templateNames}. For each service, provide a name (use template name if applicable) and brief rationale. Return as JSON array.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            services: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  name: { type: "string" },
+                  rationale: { type: "string" },
+                  is_template: { type: "boolean" }
+                }
+              }
+            }
+          }
+        }
+      });
+
+      setSuggestedServices(result.services || []);
+    } catch (error) {
+      console.error("Error suggesting services:", error);
+    }
+  };
+
+  const toggleTemplate = (templateId) => {
+    setSelectedTemplates(prev => 
+      prev.includes(templateId) ? prev.filter(id => id !== templateId) : [...prev, templateId]
+    );
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -52,7 +229,8 @@ export default function CreateProjectModal({ isOpen, onClose, onSubmit }) {
     try {
       await onSubmit({
         ...formData,
-        icon: formData.icon || selectedCategory?.icon || "🏗️"
+        icon: formData.icon || selectedCategory?.icon || "🏗️",
+        selectedTemplates: selectedTemplates
       });
       
       // Reset form
@@ -67,6 +245,8 @@ export default function CreateProjectModal({ isOpen, onClose, onSubmit }) {
         databases_count: 0,
         ai_models_count: 0
       });
+      setSelectedTemplates([]);
+      setSuggestedServices([]);
     } catch (error) {
       console.error("Error creating project:", error);
     }
@@ -85,10 +265,11 @@ export default function CreateProjectModal({ isOpen, onClose, onSubmit }) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Create New Project
+          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent flex items-center gap-2">
+            <Sparkles className="w-6 h-6 text-purple-600" />
+            Create New Project with AI Assistance
           </DialogTitle>
         </DialogHeader>
 
@@ -101,9 +282,26 @@ export default function CreateProjectModal({ isOpen, onClose, onSubmit }) {
           {/* Basic Information */}
           <div className="space-y-4">
             <div>
-              <Label htmlFor="name" className="text-sm font-semibold text-gray-700">
-                Project Name *
-              </Label>
+              <div className="flex items-center justify-between mb-1">
+                <Label htmlFor="name" className="text-sm font-semibold text-gray-700">
+                  Project Name *
+                </Label>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={generateNameAndDescription}
+                  disabled={isGeneratingName || !formData.category}
+                  className="h-7"
+                >
+                  {isGeneratingName ? (
+                    <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-3 h-3 mr-1" />
+                  )}
+                  AI Generate
+                </Button>
+              </div>
               <Input
                 id="name"
                 value={formData.name}
@@ -130,14 +328,48 @@ export default function CreateProjectModal({ isOpen, onClose, onSubmit }) {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="category" className="text-sm font-semibold text-gray-700">
-                  Category *
-                </Label>
+                <div className="flex items-center justify-between mb-1">
+                  <Label htmlFor="category" className="text-sm font-semibold text-gray-700">
+                    Category *
+                  </Label>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={suggestCategoryAndIcon}
+                    disabled={isSuggestingCategory}
+                    className="h-7"
+                  >
+                    {isSuggestingCategory ? (
+                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-3 h-3 mr-1" />
+                    )}
+                    Suggest
+                  </Button>
+                </div>
                 <Select value={formData.category} onValueChange={handleCategoryChange}>
                   <SelectTrigger className="mt-1">
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
+                    {topCategories.length > 0 && (
+                      <>
+                        <div className="px-2 py-1 text-xs font-semibold text-purple-600 flex items-center gap-1">
+                          <TrendingUp className="w-3 h-3" />
+                          Popular
+                        </div>
+                        {categories.filter(c => topCategories.includes(c.value)).map(category => (
+                          <SelectItem key={category.value} value={category.value}>
+                            <span className="flex items-center gap-2">
+                              <span>{category.icon}</span>
+                              {category.label}
+                            </span>
+                          </SelectItem>
+                        ))}
+                        <div className="px-2 py-1 text-xs text-gray-500">All Categories</div>
+                      </>
+                    )}
                     {categories.map(category => (
                       <SelectItem key={category.value} value={category.value}>
                         <span className="flex items-center gap-2">
@@ -184,9 +416,26 @@ export default function CreateProjectModal({ isOpen, onClose, onSubmit }) {
             </div>
           </div>
 
-          {/* Initial Metrics */}
+          {/* AI-Predicted Metrics */}
           <div className="border-t pt-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Initial Architecture Metrics</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Initial Architecture Metrics</h3>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={predictMetrics}
+                disabled={isGeneratingMetrics || !formData.category || !formData.description}
+                className="bg-purple-50"
+              >
+                {isGeneratingMetrics ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Sparkles className="w-4 h-4 mr-2" />
+                )}
+                AI Predict
+              </Button>
+            </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
                 <Label htmlFor="services" className="text-sm font-medium text-gray-700">
@@ -246,6 +495,64 @@ export default function CreateProjectModal({ isOpen, onClose, onSubmit }) {
             </div>
           </div>
 
+          {/* AI-Suggested Services */}
+          {suggestedServices.length > 0 && (
+            <div className="border-t pt-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">AI-Suggested Initial Services</h3>
+              <div className="grid md:grid-cols-2 gap-3">
+                {suggestedServices.map((service, idx) => (
+                  <Card key={idx} className="bg-blue-50 border-blue-200">
+                    <CardContent className="p-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h4 className="font-medium text-sm text-gray-900">{service.name}</h4>
+                          <p className="text-xs text-gray-600 mt-1">{service.rationale}</p>
+                          {service.is_template && (
+                            <Badge variant="outline" className="mt-2 text-xs">Template Available</Badge>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Top Service Templates */}
+          {topTemplates.length > 0 && (
+            <div className="border-t pt-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-blue-600" />
+                Popular Service Templates (Select to Add)
+              </h3>
+              <div className="grid md:grid-cols-3 gap-3 max-h-60 overflow-y-auto">
+                {topTemplates.map(template => (
+                  <Card 
+                    key={template.id}
+                    className={`cursor-pointer transition-all ${
+                      selectedTemplates.includes(template.id)
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'hover:border-gray-300'
+                    }`}
+                    onClick={() => toggleTemplate(template.id)}
+                  >
+                    <CardContent className="p-3">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xl">{template.icon}</span>
+                        <h4 className="font-medium text-sm text-gray-900">{template.name}</h4>
+                      </div>
+                      <p className="text-xs text-gray-600 line-clamp-2">{template.description}</p>
+                      <Badge variant="outline" className="mt-2 text-xs">
+                        {template.usage_count || 0} uses
+                      </Badge>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-6 border-t">
             <Button
@@ -261,7 +568,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSubmit }) {
               disabled={isSubmitting}
               className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
             >
-              {isSubmitting ? "Creating..." : "Create Project"}
+              {isSubmitting ? "Creating..." : `Create Project${selectedTemplates.length > 0 ? ` + ${selectedTemplates.length} Services` : ''}`}
             </Button>
           </div>
         </motion.form>
