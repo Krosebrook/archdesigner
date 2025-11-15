@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useLocation } from "react-router-dom";
@@ -14,7 +13,9 @@ import {
   Sparkles,
   Shield,
   Zap,
-  AlertTriangle
+  AlertTriangle,
+  FileText,
+  BookOpen
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -28,6 +29,8 @@ import ServiceTemplates from "../components/project-detail/ServiceTemplates";
 import DependencyVisualizer from "../components/project-detail/DependencyVisualizer";
 import AIRefactor from "../components/project-detail/AIRefactor";
 import PerformanceMonitor from "../components/project-detail/PerformanceMonitor";
+import AIDocGenerator from "../components/project-detail/AIDocGenerator";
+import RuleManagement from "../components/project-detail/RuleManagement";
 
 export default function ProjectDetail() {
   const location = useLocation();
@@ -124,7 +127,7 @@ export default function ProjectDetail() {
         services_count: (project.services_count || 0) + 1
       });
       
-      setShowTemplates(false); // Close the templates modal
+      setShowTemplates(false);
       loadProjectData();
     } catch (error) {
       console.error("Error creating service from template:", error);
@@ -208,7 +211,7 @@ export default function ProjectDetail() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6 max-w-4xl">
+          <TabsList className="grid w-full grid-cols-8 max-w-6xl">
             <TabsTrigger value="visual" className="flex items-center gap-2">
               <Network className="w-4 h-4" />
               Visual
@@ -232,6 +235,14 @@ export default function ProjectDetail() {
             <TabsTrigger value="performance" className="flex items-center gap-2">
               <Zap className="w-4 h-4" />
               Performance
+            </TabsTrigger>
+            <TabsTrigger value="documentation" className="flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              Docs
+            </TabsTrigger>
+            <TabsTrigger value="rules" className="flex items-center gap-2">
+              <BookOpen className="w-4 h-4" />
+              Rules
             </TabsTrigger>
           </TabsList>
 
@@ -274,6 +285,19 @@ export default function ProjectDetail() {
 
           <TabsContent value="performance" className="space-y-4">
             <PerformanceMonitor
+              project={project}
+            />
+          </TabsContent>
+
+          <TabsContent value="documentation" className="space-y-4">
+            <AIDocGenerator
+              project={project}
+              services={services}
+            />
+          </TabsContent>
+
+          <TabsContent value="rules" className="space-y-4">
+            <RuleManagement
               project={project}
             />
           </TabsContent>
