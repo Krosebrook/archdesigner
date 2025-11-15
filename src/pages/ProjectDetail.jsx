@@ -1,24 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useLocation } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  ArrowLeft, 
-  Plus, 
-  Network, 
-  List, 
-  Sparkles,
-  Shield,
-  Zap,
-  AlertTriangle,
-  FileText,
-  BookOpen,
-  Code2,
-  FileCode2,
-  DollarSign
+  ArrowLeft, Plus, Network, List, Sparkles, Zap, FileText, BookOpen,
+  Code2, FileCode2, DollarSign, Package, GitBranch, Layers
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -37,6 +25,9 @@ import RuleManagement from "../components/project-detail/RuleManagement";
 import AICodeReview from "../components/project-detail/AICodeReview";
 import APIGenerator from "../components/project-detail/APIGenerator";
 import CostOptimizer from "../components/project-detail/CostOptimizer";
+import DependencyManager from "../components/project-detail/DependencyManager";
+import CICDGenerator from "../components/project-detail/CICDGenerator";
+import ProjectTemplateGallery from "../components/project-detail/ProjectTemplateGallery";
 
 export default function ProjectDetail() {
   const location = useLocation();
@@ -213,145 +204,43 @@ export default function ProjectDetail() {
         </motion.div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto pb-2">
             <TabsList className="inline-flex w-auto min-w-full">
-              <TabsTrigger value="visual" className="flex items-center gap-2">
-                <Network className="w-4 h-4" />
-                Visual
-              </TabsTrigger>
-              <TabsTrigger value="list" className="flex items-center gap-2">
-                <List className="w-4 h-4" />
-                Services
-              </TabsTrigger>
-              <TabsTrigger value="validate" className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4" />
-                Validate
-              </TabsTrigger>
-              <TabsTrigger value="dependencies" className="flex items-center gap-2">
-                <Network className="w-4 h-4" />
-                Dependencies
-              </TabsTrigger>
-              <TabsTrigger value="refactor" className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4" />
-                Refactor
-              </TabsTrigger>
-              <TabsTrigger value="performance" className="flex items-center gap-2">
-                <Zap className="w-4 h-4" />
-                Performance
-              </TabsTrigger>
-              <TabsTrigger value="documentation" className="flex items-center gap-2">
-                <FileText className="w-4 h-4" />
-                Docs
-              </TabsTrigger>
-              <TabsTrigger value="rules" className="flex items-center gap-2">
-                <BookOpen className="w-4 h-4" />
-                Rules
-              </TabsTrigger>
-              <TabsTrigger value="code-review" className="flex items-center gap-2">
-                <Code2 className="w-4 h-4" />
-                Code Review
-              </TabsTrigger>
-              <TabsTrigger value="api-gen" className="flex items-center gap-2">
-                <FileCode2 className="w-4 h-4" />
-                API Gen
-              </TabsTrigger>
-              <TabsTrigger value="cost" className="flex items-center gap-2">
-                <DollarSign className="w-4 h-4" />
-                Cost
-              </TabsTrigger>
+              <TabsTrigger value="visual"><Network className="w-4 h-4 mr-1" />Visual</TabsTrigger>
+              <TabsTrigger value="list"><List className="w-4 h-4 mr-1" />Services</TabsTrigger>
+              <TabsTrigger value="validate"><Sparkles className="w-4 h-4 mr-1" />Validate</TabsTrigger>
+              <TabsTrigger value="dependencies"><Network className="w-4 h-4 mr-1" />Dependencies</TabsTrigger>
+              <TabsTrigger value="refactor"><Sparkles className="w-4 h-4 mr-1" />Refactor</TabsTrigger>
+              <TabsTrigger value="performance"><Zap className="w-4 h-4 mr-1" />Performance</TabsTrigger>
+              <TabsTrigger value="documentation"><FileText className="w-4 h-4 mr-1" />Docs</TabsTrigger>
+              <TabsTrigger value="rules"><BookOpen className="w-4 h-4 mr-1" />Rules</TabsTrigger>
+              <TabsTrigger value="code-review"><Code2 className="w-4 h-4 mr-1" />Code Review</TabsTrigger>
+              <TabsTrigger value="api-gen"><FileCode2 className="w-4 h-4 mr-1" />API Gen</TabsTrigger>
+              <TabsTrigger value="cost"><DollarSign className="w-4 h-4 mr-1" />Cost</TabsTrigger>
+              <TabsTrigger value="deps"><Package className="w-4 h-4 mr-1" />Deps</TabsTrigger>
+              <TabsTrigger value="cicd"><GitBranch className="w-4 h-4 mr-1" />CI/CD</TabsTrigger>
+              <TabsTrigger value="templates"><Layers className="w-4 h-4 mr-1" />Templates</TabsTrigger>
             </TabsList>
           </div>
 
-          <TabsContent value="visual" className="space-y-4">
-            <VisualEditor
-              services={services}
-              onUpdateService={handleUpdateService}
-              onDeleteService={handleDeleteService}
-            />
-          </TabsContent>
-
-          <TabsContent value="list" className="space-y-4">
-            <ServicesList
-              services={services}
-              onUpdateService={handleUpdateService}
-              onDeleteService={handleDeleteService}
-            />
-          </TabsContent>
-
-          <TabsContent value="validate" className="space-y-4">
-            <AIValidator
-              project={project}
-              services={services}
-            />
-          </TabsContent>
-
-          <TabsContent value="dependencies" className="space-y-4">
-            <DependencyVisualizer
-              project={project}
-              services={services}
-            />
-          </TabsContent>
-
-          <TabsContent value="refactor" className="space-y-4">
-            <AIRefactor
-              project={project}
-              services={services}
-            />
-          </TabsContent>
-
-          <TabsContent value="performance" className="space-y-4">
-            <PerformanceMonitor
-              project={project}
-            />
-          </TabsContent>
-
-          <TabsContent value="documentation" className="space-y-4">
-            <AIDocGenerator
-              project={project}
-              services={services}
-            />
-          </TabsContent>
-
-          <TabsContent value="rules" className="space-y-4">
-            <RuleManagement
-              project={project}
-            />
-          </TabsContent>
-
-          <TabsContent value="code-review" className="space-y-4">
-            <AICodeReview
-              project={project}
-              services={services}
-            />
-          </TabsContent>
-
-          <TabsContent value="api-gen" className="space-y-4">
-            <APIGenerator
-              project={project}
-              services={services}
-            />
-          </TabsContent>
-
-          <TabsContent value="cost" className="space-y-4">
-            <CostOptimizer
-              project={project}
-              services={services}
-            />
-          </TabsContent>
+          <TabsContent value="visual"><VisualEditor services={services} onUpdateService={handleUpdateService} onDeleteService={handleDeleteService} /></TabsContent>
+          <TabsContent value="list"><ServicesList services={services} onUpdateService={handleUpdateService} onDeleteService={handleDeleteService} /></TabsContent>
+          <TabsContent value="validate"><AIValidator project={project} services={services} /></TabsContent>
+          <TabsContent value="dependencies"><DependencyVisualizer project={project} services={services} /></TabsContent>
+          <TabsContent value="refactor"><AIRefactor project={project} services={services} /></TabsContent>
+          <TabsContent value="performance"><PerformanceMonitor project={project} /></TabsContent>
+          <TabsContent value="documentation"><AIDocGenerator project={project} services={services} /></TabsContent>
+          <TabsContent value="rules"><RuleManagement project={project} /></TabsContent>
+          <TabsContent value="code-review"><AICodeReview project={project} services={services} /></TabsContent>
+          <TabsContent value="api-gen"><APIGenerator project={project} services={services} /></TabsContent>
+          <TabsContent value="cost"><CostOptimizer project={project} services={services} /></TabsContent>
+          <TabsContent value="deps"><DependencyManager project={project} services={services} /></TabsContent>
+          <TabsContent value="cicd"><CICDGenerator project={project} services={services} /></TabsContent>
+          <TabsContent value="templates"><ProjectTemplateGallery onApplyTemplate={(t) => console.log('Apply template', t)} /></TabsContent>
         </Tabs>
 
-        <AddServiceModal
-          isOpen={showAddService}
-          onClose={() => setShowAddService(false)}
-          onSubmit={handleAddService}
-          existingServices={services}
-        />
-
-        <ServiceTemplates
-          isOpen={showTemplates}
-          onClose={() => setShowTemplates(false)}
-          onSelectTemplate={handleSelectTemplate}
-        />
+        <AddServiceModal isOpen={showAddService} onClose={() => setShowAddService(false)} onSubmit={handleAddService} existingServices={services} />
+        <ServiceTemplates isOpen={showTemplates} onClose={() => setShowTemplates(false)} onSelectTemplate={handleSelectTemplate} />
       </div>
     </div>
   );
