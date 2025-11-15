@@ -5,9 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  ArrowLeft, Plus, Network, List, Sparkles, Zap, FileText, BookOpen,
-  Code2, FileCode2, DollarSign, Package, GitBranch, Layers, Workflow, Cpu, Wand2,
-  Code, Users, Settings
+  ArrowLeft, Plus, Network, List, Sparkles, Zap, FileText, Code2, FileCode2, 
+  DollarSign, GitBranch, Cpu, Code, Users, Settings, Compass, Brain, BarChart3
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -20,21 +19,19 @@ import AddServiceModal from "../components/project-detail/AddServiceModal";
 import ServiceTemplates from "../components/project-detail/ServiceTemplates";
 import DependencyVisualizer from "../components/project-detail/DependencyVisualizer";
 import AIRefactor from "../components/project-detail/AIRefactor";
-import PerformanceMonitor from "../components/project-detail/PerformanceMonitor";
 import AIDocGenerator from "../components/project-detail/AIDocGenerator";
-import RuleManagement from "../components/project-detail/RuleManagement";
 import AICodeReview from "../components/project-detail/AICodeReview";
 import APIGenerator from "../components/project-detail/APIGenerator";
 import CostOptimizer from "../components/project-detail/CostOptimizer";
-import DependencyManager from "../components/project-detail/DependencyManager";
 import CICDGenerator from "../components/project-detail/CICDGenerator";
-import ProjectTemplateGallery from "../components/project-detail/ProjectTemplateGallery";
 import ArchitectureRefiner from "../components/project-detail/ArchitectureRefiner";
 import CICDIntelligence from "../components/project-detail/CICDIntelligence";
-import TemplateCreator from "../components/project-detail/TemplateCreator";
 import CodeGenerator from "../components/project-detail/CodeGenerator";
 import CollaborationHub from "../components/project-detail/CollaborationHub";
 import TemplateManager from "../components/project-detail/TemplateManager";
+import ServiceDiscovery from "../components/project-detail/ServiceDiscovery";
+import AICollaborationAssistant from "../components/project-detail/AICollaborationAssistant";
+import TemplateInsights from "../components/project-detail/TemplateInsights";
 
 export default function ProjectDetail() {
   const location = useLocation();
@@ -216,6 +213,9 @@ export default function ProjectDetail() {
               <TabsTrigger value="code-gen"><Code className="w-4 h-4 mr-1" />Generate</TabsTrigger>
               <TabsTrigger value="collab"><Users className="w-4 h-4 mr-1" />Collab</TabsTrigger>
               <TabsTrigger value="template-mgmt"><Settings className="w-4 h-4 mr-1" />Manage</TabsTrigger>
+              <TabsTrigger value="discover"><Compass className="w-4 h-4 mr-1" />Discover</TabsTrigger>
+              <TabsTrigger value="ai-assist"><Brain className="w-4 h-4 mr-1" />AI Assist</TabsTrigger>
+              <TabsTrigger value="insights"><BarChart3 className="w-4 h-4 mr-1" />Insights</TabsTrigger>
             </TabsList>
           </div>
 
@@ -233,6 +233,9 @@ export default function ProjectDetail() {
           <TabsContent value="code-gen"><CodeGenerator project={project} services={services} /></TabsContent>
           <TabsContent value="collab"><CollaborationHub project={project} /></TabsContent>
           <TabsContent value="template-mgmt"><TemplateManager /></TabsContent>
+          <TabsContent value="discover"><ServiceDiscovery project={project} services={services} /></TabsContent>
+          <TabsContent value="ai-assist"><AICollaborationAssistant project={project} services={services} /></TabsContent>
+          <TabsContent value="insights"><TemplateInsights /></TabsContent>
         </Tabs>
 
         <AddServiceModal isOpen={showAddService} onClose={() => setShowAddService(false)} onSubmit={handleAddService} existingServices={services} />
