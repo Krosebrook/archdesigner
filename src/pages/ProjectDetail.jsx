@@ -15,7 +15,10 @@ import {
   Zap,
   AlertTriangle,
   FileText,
-  BookOpen
+  BookOpen,
+  Code2,
+  FileCode2,
+  DollarSign
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -31,6 +34,9 @@ import AIRefactor from "../components/project-detail/AIRefactor";
 import PerformanceMonitor from "../components/project-detail/PerformanceMonitor";
 import AIDocGenerator from "../components/project-detail/AIDocGenerator";
 import RuleManagement from "../components/project-detail/RuleManagement";
+import AICodeReview from "../components/project-detail/AICodeReview";
+import APIGenerator from "../components/project-detail/APIGenerator";
+import CostOptimizer from "../components/project-detail/CostOptimizer";
 
 export default function ProjectDetail() {
   const location = useLocation();
@@ -74,7 +80,6 @@ export default function ProjectDetail() {
         position: { x: Math.random() * 400 + 100, y: Math.random() * 300 + 100 }
       });
       
-      // Update project service count
       await base44.entities.Project.update(projectId, {
         services_count: (project.services_count || 0) + 1
       });
@@ -99,7 +104,6 @@ export default function ProjectDetail() {
     try {
       await base44.entities.Service.delete(serviceId);
       
-      // Update project service count
       await base44.entities.Project.update(projectId, {
         services_count: Math.max(0, (project.services_count || 1) - 1)
       });
@@ -161,7 +165,6 @@ export default function ProjectDetail() {
   return (
     <div className="p-6 md:p-8">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -209,42 +212,55 @@ export default function ProjectDetail() {
           </div>
         </motion.div>
 
-        {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-8 max-w-6xl">
-            <TabsTrigger value="visual" className="flex items-center gap-2">
-              <Network className="w-4 h-4" />
-              Visual
-            </TabsTrigger>
-            <TabsTrigger value="list" className="flex items-center gap-2">
-              <List className="w-4 h-4" />
-              Services
-            </TabsTrigger>
-            <TabsTrigger value="validate" className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4" />
-              Validate
-            </TabsTrigger>
-            <TabsTrigger value="dependencies" className="flex items-center gap-2">
-              <Network className="w-4 h-4" />
-              Dependencies
-            </TabsTrigger>
-            <TabsTrigger value="refactor" className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4" />
-              Refactor
-            </TabsTrigger>
-            <TabsTrigger value="performance" className="flex items-center gap-2">
-              <Zap className="w-4 h-4" />
-              Performance
-            </TabsTrigger>
-            <TabsTrigger value="documentation" className="flex items-center gap-2">
-              <FileText className="w-4 h-4" />
-              Docs
-            </TabsTrigger>
-            <TabsTrigger value="rules" className="flex items-center gap-2">
-              <BookOpen className="w-4 h-4" />
-              Rules
-            </TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto">
+            <TabsList className="inline-flex w-auto min-w-full">
+              <TabsTrigger value="visual" className="flex items-center gap-2">
+                <Network className="w-4 h-4" />
+                Visual
+              </TabsTrigger>
+              <TabsTrigger value="list" className="flex items-center gap-2">
+                <List className="w-4 h-4" />
+                Services
+              </TabsTrigger>
+              <TabsTrigger value="validate" className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4" />
+                Validate
+              </TabsTrigger>
+              <TabsTrigger value="dependencies" className="flex items-center gap-2">
+                <Network className="w-4 h-4" />
+                Dependencies
+              </TabsTrigger>
+              <TabsTrigger value="refactor" className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4" />
+                Refactor
+              </TabsTrigger>
+              <TabsTrigger value="performance" className="flex items-center gap-2">
+                <Zap className="w-4 h-4" />
+                Performance
+              </TabsTrigger>
+              <TabsTrigger value="documentation" className="flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                Docs
+              </TabsTrigger>
+              <TabsTrigger value="rules" className="flex items-center gap-2">
+                <BookOpen className="w-4 h-4" />
+                Rules
+              </TabsTrigger>
+              <TabsTrigger value="code-review" className="flex items-center gap-2">
+                <Code2 className="w-4 h-4" />
+                Code Review
+              </TabsTrigger>
+              <TabsTrigger value="api-gen" className="flex items-center gap-2">
+                <FileCode2 className="w-4 h-4" />
+                API Gen
+              </TabsTrigger>
+              <TabsTrigger value="cost" className="flex items-center gap-2">
+                <DollarSign className="w-4 h-4" />
+                Cost
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="visual" className="space-y-4">
             <VisualEditor
@@ -301,9 +317,29 @@ export default function ProjectDetail() {
               project={project}
             />
           </TabsContent>
+
+          <TabsContent value="code-review" className="space-y-4">
+            <AICodeReview
+              project={project}
+              services={services}
+            />
+          </TabsContent>
+
+          <TabsContent value="api-gen" className="space-y-4">
+            <APIGenerator
+              project={project}
+              services={services}
+            />
+          </TabsContent>
+
+          <TabsContent value="cost" className="space-y-4">
+            <CostOptimizer
+              project={project}
+              services={services}
+            />
+          </TabsContent>
         </Tabs>
 
-        {/* Add Service Modal */}
         <AddServiceModal
           isOpen={showAddService}
           onClose={() => setShowAddService(false)}
@@ -311,7 +347,6 @@ export default function ProjectDetail() {
           existingServices={services}
         />
 
-        {/* Service Templates Modal */}
         <ServiceTemplates
           isOpen={showTemplates}
           onClose={() => setShowTemplates(false)}
