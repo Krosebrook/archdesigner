@@ -1,0 +1,130 @@
+
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { 
+  Server, 
+  Database, 
+  Zap, 
+  ExternalLink,
+  MoreVertical 
+} from "lucide-react";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { motion } from "framer-motion";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+const statusColors = {
+  planning: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  development: "bg-blue-100 text-blue-800 border-blue-200",
+  testing: "bg-purple-100 text-purple-800 border-purple-200",
+  deployed: "bg-green-100 text-green-800 border-green-200",
+  archived: "bg-gray-100 text-gray-800 border-gray-200"
+};
+
+const categoryGradients = {
+  desktop: "from-indigo-500 to-purple-600",
+  mobile: "from-pink-500 to-rose-600",
+  web: "from-cyan-500 to-blue-600",
+  enterprise: "from-emerald-500 to-green-600",
+  ai: "from-violet-500 to-purple-600",
+  platform: "from-orange-500 to-red-600"
+};
+
+export default function ProjectCard({ project, index, onUpdate }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.1 }}
+      whileHover={{ y: -4 }}
+    >
+      <Card className="group bg-white hover:shadow-xl transition-all duration-300 border-0 shadow-md overflow-hidden">
+        {/* Header with gradient */}
+        <div className={`h-24 bg-gradient-to-r ${categoryGradients[project.category] || 'from-gray-500 to-gray-600'} relative overflow-hidden`}>
+          <div className="absolute inset-0 bg-black bg-opacity-20" />
+          <div className="absolute top-4 right-4">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
+                  <MoreVertical className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem>Edit Project</DropdownMenuItem>
+                <DropdownMenuItem>Duplicate</DropdownMenuItem>
+                <DropdownMenuItem className="text-red-600">Archive</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+
+        <CardHeader className="relative -mt-8 px-6 pb-4">
+          <div className="flex items-start justify-between">
+            <div className="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center text-2xl border border-gray-100">
+              {project.icon || "🏗️"}
+            </div>
+            <Badge className={`${statusColors[project.status]} border mt-2`}>
+              {project.status}
+            </Badge>
+          </div>
+        </CardHeader>
+
+        <CardContent className="px-6 pb-6">
+          <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-1">
+            {project.name}
+          </h3>
+          <p className="text-gray-600 text-sm mb-4 line-clamp-2 h-10">
+            {project.description}
+          </p>
+
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-3 mb-6">
+            <div className="text-center">
+              <div className="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-lg mx-auto mb-1">
+                <Server className="w-4 h-4 text-blue-600" />
+              </div>
+              <span className="text-xs text-gray-500">Services</span>
+              <p className="text-sm font-semibold text-gray-900">{project.services_count || 0}</p>
+            </div>
+            <div className="text-center">
+              <div className="flex items-center justify-center w-8 h-8 bg-purple-100 rounded-lg mx-auto mb-1">
+                <Database className="w-4 h-4 text-purple-600" />
+              </div>
+              <span className="text-xs text-gray-500">DBs</span>
+              <p className="text-sm font-semibold text-gray-900">{project.databases_count || 0}</p>
+            </div>
+            <div className="text-center">
+              <div className="flex items-center justify-center w-8 h-8 bg-green-100 rounded-lg mx-auto mb-1">
+                <Zap className="w-4 h-4 text-green-600" />
+              </div>
+              <span className="text-xs text-gray-500">APIs</span>
+              <p className="text-sm font-semibold text-gray-900">{project.integrations_count || 0}</p>
+            </div>
+          </div>
+
+          {/* Category and Action */}
+          <div className="flex items-center justify-between">
+            <Badge variant="outline" className="capitalize">
+              {project.category}
+            </Badge>
+            <Link to={createPageUrl(`ProjectDetail?id=${project.id}`)}>
+              <Button 
+                size="sm" 
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white group-hover:shadow-lg transition-all duration-200"
+              >
+                View
+                <ExternalLink className="w-3 h-3 ml-2" />
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
