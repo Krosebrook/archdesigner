@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   ArrowLeft, Plus, Network, List, Sparkles, Zap, FileText, Code2, FileCode2, 
-  DollarSign, GitBranch, Cpu, Code, Users, Settings, Compass, Brain, BarChart3
+  DollarSign, GitBranch, Cpu, Code, Users, Settings, Compass, Brain, BarChart3,
+  Eye, Rocket, Wand2
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -32,6 +33,9 @@ import TemplateManager from "../components/project-detail/TemplateManager";
 import ServiceDiscovery from "../components/project-detail/ServiceDiscovery";
 import AICollaborationAssistant from "../components/project-detail/AICollaborationAssistant";
 import TemplateInsights from "../components/project-detail/TemplateInsights";
+import AIArchitectureVisualizer from "../components/project-detail/AIArchitectureVisualizer";
+import CICDAutomationEngine from "../components/project-detail/CICDAutomationEngine";
+import AdvancedTemplateIntelligence from "../components/project-detail/AdvancedTemplateIntelligence";
 
 export default function ProjectDetail() {
   const location = useLocation();
@@ -216,6 +220,9 @@ export default function ProjectDetail() {
               <TabsTrigger value="discover"><Compass className="w-4 h-4 mr-1" />Discover</TabsTrigger>
               <TabsTrigger value="ai-assist"><Brain className="w-4 h-4 mr-1" />AI Assist</TabsTrigger>
               <TabsTrigger value="insights"><BarChart3 className="w-4 h-4 mr-1" />Insights</TabsTrigger>
+              <TabsTrigger value="ai-viz"><Eye className="w-4 h-4 mr-1" />Visualize</TabsTrigger>
+              <TabsTrigger value="auto-deploy"><Rocket className="w-4 h-4 mr-1" />Deploy</TabsTrigger>
+              <TabsTrigger value="template-ai"><Wand2 className="w-4 h-4 mr-1" />Template AI</TabsTrigger>
             </TabsList>
           </div>
 
@@ -236,6 +243,9 @@ export default function ProjectDetail() {
           <TabsContent value="discover"><ServiceDiscovery project={project} services={services} /></TabsContent>
           <TabsContent value="ai-assist"><AICollaborationAssistant project={project} services={services} /></TabsContent>
           <TabsContent value="insights"><TemplateInsights /></TabsContent>
+          <TabsContent value="ai-viz"><AIArchitectureVisualizer project={project} services={services} /></TabsContent>
+          <TabsContent value="auto-deploy"><CICDAutomationEngine project={project} services={services} /></TabsContent>
+          <TabsContent value="template-ai"><AdvancedTemplateIntelligence project={project} /></TabsContent>
         </Tabs>
 
         <AddServiceModal isOpen={showAddService} onClose={() => setShowAddService(false)} onSubmit={handleAddService} existingServices={services} />
