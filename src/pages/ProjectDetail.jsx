@@ -1,140 +1,33 @@
-import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
-import { useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  ArrowLeft, Plus, Network, List, Sparkles, Zap, FileText, Code2, FileCode2, 
-  DollarSign, GitBranch, Cpu, Code, Users, Settings, Compass, Brain, BarChart3,
-  Eye, Rocket, Wand2
-} from "lucide-react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { useLocation, Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import VisualEditor from "../components/project-detail/VisualEditor";
-import ServicesList from "../components/project-detail/ServicesList";
-import AIValidator from "../components/project-detail/AIValidator";
+import { useProject } from "../hooks/useProject";
+import { tabConfig } from "../components/project-detail/ProjectTabs";
+import ProjectHeader from "../components/project-detail/ProjectHeader";
 import AddServiceModal from "../components/project-detail/AddServiceModal";
 import ServiceTemplates from "../components/project-detail/ServiceTemplates";
-import DependencyVisualizer from "../components/project-detail/DependencyVisualizer";
-import AIRefactor from "../components/project-detail/AIRefactor";
-import AIDocGenerator from "../components/project-detail/AIDocGenerator";
-import AICodeReview from "../components/project-detail/AICodeReview";
-import APIGenerator from "../components/project-detail/APIGenerator";
-import CostOptimizer from "../components/project-detail/CostOptimizer";
-import CICDGenerator from "../components/project-detail/CICDGenerator";
-import ArchitectureRefiner from "../components/project-detail/ArchitectureRefiner";
-import CICDIntelligence from "../components/project-detail/CICDIntelligence";
-import CodeGenerator from "../components/project-detail/CodeGenerator";
-import CollaborationHub from "../components/project-detail/CollaborationHub";
-import TemplateManager from "../components/project-detail/TemplateManager";
-import ServiceDiscovery from "../components/project-detail/ServiceDiscovery";
-import AICollaborationAssistant from "../components/project-detail/AICollaborationAssistant";
-import TemplateInsights from "../components/project-detail/TemplateInsights";
-import AIArchitectureVisualizer from "../components/project-detail/AIArchitectureVisualizer";
-import CICDAutomationEngine from "../components/project-detail/CICDAutomationEngine";
-import AdvancedTemplateIntelligence from "../components/project-detail/AdvancedTemplateIntelligence";
 
 export default function ProjectDetail() {
   const location = useLocation();
   const urlParams = new URLSearchParams(location.search);
   const projectId = urlParams.get("id");
 
-  const [project, setProject] = useState(null);
-  const [services, setServices] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { project, services, isLoading, addService, updateService, deleteService, createFromTemplate } = useProject(projectId);
   const [showAddService, setShowAddService] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
   const [activeTab, setActiveTab] = useState("visual");
 
-  useEffect(() => {
-    if (projectId) {
-      loadProjectData();
-    }
-  }, [projectId]);
-
-  const loadProjectData = async () => {
-    setIsLoading(true);
-    try {
-      const projects = await base44.entities.Project.list();
-      const foundProject = projects.find(p => p.id === projectId);
-      setProject(foundProject);
-
-      const allServices = await base44.entities.Service.list();
-      const projectServices = allServices.filter(s => s.project_id === projectId);
-      setServices(projectServices);
-    } catch (error) {
-      console.error("Error loading project:", error);
-    }
-    setIsLoading(false);
-  };
-
   const handleAddService = async (serviceData) => {
-    try {
-      await base44.entities.Service.create({
-        ...serviceData,
-        project_id: projectId,
-        position: { x: Math.random() * 400 + 100, y: Math.random() * 300 + 100 }
-      });
-      
-      await base44.entities.Project.update(projectId, {
-        services_count: (project.services_count || 0) + 1
-      });
-      
-      setShowAddService(false);
-      loadProjectData();
-    } catch (error) {
-      console.error("Error adding service:", error);
-    }
-  };
-
-  const handleUpdateService = async (serviceId, updates) => {
-    try {
-      await base44.entities.Service.update(serviceId, updates);
-      loadProjectData();
-    } catch (error) {
-      console.error("Error updating service:", error);
-    }
-  };
-
-  const handleDeleteService = async (serviceId) => {
-    try {
-      await base44.entities.Service.delete(serviceId);
-      
-      await base44.entities.Project.update(projectId, {
-        services_count: Math.max(0, (project.services_count || 1) - 1)
-      });
-      
-      loadProjectData();
-    } catch (error) {
-      console.error("Error deleting service:", error);
-    }
+    await addService(serviceData);
+    setShowAddService(false);
   };
 
   const handleSelectTemplate = async (template) => {
-    try {
-      await base44.entities.Service.create({
-        project_id: projectId,
-        name: template.name,
-        description: template.description,
-        icon: template.icon,
-        category: template.category,
-        technologies: template.default_technologies,
-        apis: template.default_apis,
-        position: { x: Math.random() * 400 + 100, y: Math.random() * 300 + 100 }
-      });
-      
-      await base44.entities.Project.update(projectId, {
-        services_count: (project.services_count || 0) + 1
-      });
-      
-      setShowTemplates(false);
-      loadProjectData();
-    } catch (error) {
-      console.error("Error creating service from template:", error);
-    }
+    await createFromTemplate(template);
+    setShowTemplates(false);
   };
 
   if (isLoading) {
@@ -161,95 +54,63 @@ export default function ProjectDetail() {
     );
   }
 
+  const componentProps = {
+    project,
+    services,
+    onUpdateService: updateService,
+    onDeleteService: deleteService
+  };
+
   return (
     <div className="p-6 md:p-8">
       <div className="max-w-7xl mx-auto">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <Link to={createPageUrl("Projects")}>
-            <Button variant="ghost" className="mb-4">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Projects
-            </Button>
-          </Link>
-
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div className="flex items-start gap-4">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-100 to-purple-100 rounded-2xl flex items-center justify-center text-3xl shadow-lg">
-                {project.icon || "🏗️"}
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">{project.name}</h1>
-                <p className="text-gray-600 mt-1">{project.description}</p>
-                <div className="flex items-center gap-3 mt-3">
-                  <Badge className="capitalize">{project.category}</Badge>
-                  <Badge variant="outline" className="capitalize">{project.status}</Badge>
-                  <span className="text-sm text-gray-500">{services.length} services</span>
-                </div>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={() => setShowTemplates(true)} variant="outline" className="border-blue-200 hover:bg-blue-50">
-                <Sparkles className="w-4 h-4 mr-2" />
-                Templates
-              </Button>
-              <Button onClick={() => setShowAddService(true)} className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Service
-              </Button>
-            </div>
-          </div>
-        </motion.div>
+        <ProjectHeader
+          project={project}
+          servicesCount={services.length}
+          onAddService={() => setShowAddService(true)}
+          onShowTemplates={() => setShowTemplates(true)}
+        />
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <div className="overflow-x-auto pb-2">
             <TabsList className="inline-flex w-auto min-w-full gap-1 flex-wrap">
-              <TabsTrigger value="visual"><Network className="w-4 h-4 mr-1" />Visual</TabsTrigger>
-              <TabsTrigger value="list"><List className="w-4 h-4 mr-1" />Services</TabsTrigger>
-              <TabsTrigger value="validate"><Sparkles className="w-4 h-4 mr-1" />Validate</TabsTrigger>
-              <TabsTrigger value="dependencies"><Network className="w-4 h-4 mr-1" />Graph</TabsTrigger>
-              <TabsTrigger value="refactor"><Sparkles className="w-4 h-4 mr-1" />Refactor</TabsTrigger>
-              <TabsTrigger value="documentation"><FileText className="w-4 h-4 mr-1" />Docs</TabsTrigger>
-              <TabsTrigger value="code-review"><Code2 className="w-4 h-4 mr-1" />Review</TabsTrigger>
-              <TabsTrigger value="api-gen"><FileCode2 className="w-4 h-4 mr-1" />API</TabsTrigger>
-              <TabsTrigger value="cost"><DollarSign className="w-4 h-4 mr-1" />Cost</TabsTrigger>
-              <TabsTrigger value="cicd"><GitBranch className="w-4 h-4 mr-1" />CI/CD</TabsTrigger>
-              <TabsTrigger value="arch-refine"><Cpu className="w-4 h-4 mr-1" />Refine</TabsTrigger>
-              <TabsTrigger value="code-gen"><Code className="w-4 h-4 mr-1" />Generate</TabsTrigger>
-              <TabsTrigger value="collab"><Users className="w-4 h-4 mr-1" />Collab</TabsTrigger>
-              <TabsTrigger value="template-mgmt"><Settings className="w-4 h-4 mr-1" />Manage</TabsTrigger>
-              <TabsTrigger value="discover"><Compass className="w-4 h-4 mr-1" />Discover</TabsTrigger>
-              <TabsTrigger value="ai-assist"><Brain className="w-4 h-4 mr-1" />AI Assist</TabsTrigger>
-              <TabsTrigger value="insights"><BarChart3 className="w-4 h-4 mr-1" />Insights</TabsTrigger>
-              <TabsTrigger value="ai-viz"><Eye className="w-4 h-4 mr-1" />Visualize</TabsTrigger>
-              <TabsTrigger value="auto-deploy"><Rocket className="w-4 h-4 mr-1" />Deploy</TabsTrigger>
-              <TabsTrigger value="template-ai"><Wand2 className="w-4 h-4 mr-1" />Template AI</TabsTrigger>
+              {tabConfig.map(tab => (
+                <TabsTrigger key={tab.id} value={tab.id}>
+                  <tab.icon className="w-4 h-4 mr-1" />
+                  {tab.label}
+                </TabsTrigger>
+              ))}
             </TabsList>
           </div>
 
-          <TabsContent value="visual"><VisualEditor services={services} onUpdateService={handleUpdateService} onDeleteService={handleDeleteService} /></TabsContent>
-          <TabsContent value="list"><ServicesList services={services} onUpdateService={handleUpdateService} onDeleteService={handleDeleteService} /></TabsContent>
-          <TabsContent value="validate"><AIValidator project={project} services={services} /></TabsContent>
-          <TabsContent value="dependencies"><DependencyVisualizer project={project} services={services} /></TabsContent>
-          <TabsContent value="refactor"><AIRefactor project={project} services={services} /></TabsContent>
-          <TabsContent value="documentation"><AIDocGenerator project={project} services={services} /></TabsContent>
-          <TabsContent value="code-review"><AICodeReview project={project} services={services} /></TabsContent>
-          <TabsContent value="api-gen"><APIGenerator project={project} services={services} /></TabsContent>
-          <TabsContent value="cost"><CostOptimizer project={project} services={services} /></TabsContent>
-          <TabsContent value="cicd"><CICDGenerator project={project} services={services} /></TabsContent>
-          <TabsContent value="arch-refine"><ArchitectureRefiner project={project} services={services} /></TabsContent>
-          <TabsContent value="code-gen"><CodeGenerator project={project} services={services} /></TabsContent>
-          <TabsContent value="collab"><CollaborationHub project={project} /></TabsContent>
-          <TabsContent value="template-mgmt"><TemplateManager /></TabsContent>
-          <TabsContent value="discover"><ServiceDiscovery project={project} services={services} /></TabsContent>
-          <TabsContent value="ai-assist"><AICollaborationAssistant project={project} services={services} /></TabsContent>
-          <TabsContent value="insights"><TemplateInsights /></TabsContent>
-          <TabsContent value="ai-viz"><AIArchitectureVisualizer project={project} services={services} /></TabsContent>
-          <TabsContent value="auto-deploy"><CICDAutomationEngine project={project} services={services} /></TabsContent>
-          <TabsContent value="template-ai"><AdvancedTemplateIntelligence project={project} /></TabsContent>
+          {tabConfig.map(tab => {
+            const TabComponent = tab.component;
+            const props = tab.props.reduce((acc, propName) => {
+              if (componentProps[propName] !== undefined) {
+                acc[propName] = componentProps[propName];
+              }
+              return acc;
+            }, {});
+
+            return (
+              <TabsContent key={tab.id} value={tab.id}>
+                <TabComponent {...props} />
+              </TabsContent>
+            );
+          })}
         </Tabs>
 
-        <AddServiceModal isOpen={showAddService} onClose={() => setShowAddService(false)} onSubmit={handleAddService} existingServices={services} />
-        <ServiceTemplates isOpen={showTemplates} onClose={() => setShowTemplates(false)} onSelectTemplate={handleSelectTemplate} />
+        <AddServiceModal
+          isOpen={showAddService}
+          onClose={() => setShowAddService(false)}
+          onSubmit={handleAddService}
+          existingServices={services}
+        />
+        <ServiceTemplates
+          isOpen={showTemplates}
+          onClose={() => setShowTemplates(false)}
+          onSelectTemplate={handleSelectTemplate}
+        />
       </div>
     </div>
   );
