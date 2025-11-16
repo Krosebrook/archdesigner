@@ -4,7 +4,7 @@ import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import { useProject } from "../hooks/useProject";
+import { useProject } from "../components/shared/useProject";
 import { tabConfig } from "../components/project-detail/ProjectTabs";
 import ProjectHeader from "../components/project-detail/ProjectHeader";
 import AddServiceModal from "../components/project-detail/AddServiceModal";
