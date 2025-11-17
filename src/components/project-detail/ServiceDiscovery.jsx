@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Loader2, Lightbulb, AlertTriangle, TrendingUp, CheckCircle2 } from "lucide-react";
+import { Sparkles, Loader2, Lightbulb, AlertTriangle, TrendingUp, CheckCircle2, DollarSign, Zap } from "lucide-react";
 import { motion } from "framer-motion";
 
 const priorityColors = {
@@ -72,6 +72,9 @@ For each suggested service provide:
 - benefits: Array of specific benefits
 - estimated_complexity: low/medium/high
 - priority: high/medium/low
+- suggested_architectural_patterns: Array of patterns (e.g., "CQRS", "Event Sourcing", "Circuit Breaker")
+- cost_implications: Brief description of infrastructure/operational costs
+- performance_impact: Expected impact on system performance
 
 Also provide:
 - gaps_identified: Array of architecture gaps
@@ -94,7 +97,10 @@ Return as JSON.`;
                   rationale: { type: "string" },
                   benefits: { type: "array", items: { type: "string" } },
                   estimated_complexity: { type: "string" },
-                  priority: { type: "string" }
+                  priority: { type: "string" },
+                  suggested_architectural_patterns: { type: "array", items: { type: "string" } },
+                  cost_implications: { type: "string" },
+                  performance_impact: { type: "string" }
                 }
               }
             },
@@ -136,7 +142,7 @@ Return as JSON.`;
             AI Service Discovery
           </CardTitle>
           <p className="text-sm text-gray-600 mt-1">
-            Automatically identify missing services and architecture gaps
+            Automatically identify missing services and architecture gaps with enhanced insights
           </p>
         </CardHeader>
         <CardContent>
@@ -214,7 +220,7 @@ Return as JSON.`;
                       <p className="text-sm text-gray-700 mb-3">{service.rationale}</p>
                       
                       {service.benefits && service.benefits.length > 0 && (
-                        <div className="bg-green-50 rounded p-3">
+                        <div className="bg-green-50 rounded p-3 mb-3">
                           <p className="text-xs font-semibold text-green-900 mb-2">Benefits:</p>
                           <ul className="space-y-1">
                             {service.benefits.map((benefit, j) => (
@@ -226,6 +232,43 @@ Return as JSON.`;
                           </ul>
                         </div>
                       )}
+
+                      {/* Enhanced Insights */}
+                      <div className="grid md:grid-cols-3 gap-3 mt-3">
+                        {service.suggested_architectural_patterns && service.suggested_architectural_patterns.length > 0 && (
+                          <div className="bg-purple-50 rounded p-3">
+                            <p className="text-xs font-semibold text-purple-900 mb-1 flex items-center gap-1">
+                              <Sparkles className="w-3 h-3" />
+                              Patterns
+                            </p>
+                            <div className="flex flex-wrap gap-1">
+                              {service.suggested_architectural_patterns.map((pattern, k) => (
+                                <Badge key={k} variant="outline" className="text-xs">{pattern}</Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {service.cost_implications && (
+                          <div className="bg-blue-50 rounded p-3">
+                            <p className="text-xs font-semibold text-blue-900 mb-1 flex items-center gap-1">
+                              <DollarSign className="w-3 h-3" />
+                              Cost Impact
+                            </p>
+                            <p className="text-xs text-blue-800">{service.cost_implications}</p>
+                          </div>
+                        )}
+
+                        {service.performance_impact && (
+                          <div className="bg-yellow-50 rounded p-3">
+                            <p className="text-xs font-semibold text-yellow-900 mb-1 flex items-center gap-1">
+                              <Zap className="w-3 h-3" />
+                              Performance
+                            </p>
+                            <p className="text-xs text-yellow-800">{service.performance_impact}</p>
+                          </div>
+                        )}
+                      </div>
                     </CardContent>
                   </Card>
                 </motion.div>

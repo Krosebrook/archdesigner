@@ -1,7 +1,7 @@
 import { 
   Network, List, Sparkles, FileText, Code2, FileCode2, 
   DollarSign, GitBranch, Cpu, Code, Users, Settings, Compass, 
-  Brain, BarChart3, Eye, Rocket, Wand2
+  Brain, BarChart3, Eye, Rocket, Wand2, CheckSquare, Zap
 } from "lucide-react";
 
 import VisualEditor from "./VisualEditor";
@@ -25,10 +25,15 @@ import TemplateInsights from "./TemplateInsights";
 import AIArchitectureVisualizer from "./AIArchitectureVisualizer";
 import CICDAutomationEngine from "./CICDAutomationEngine";
 import AdvancedTemplateIntelligence from "./AdvancedTemplateIntelligence";
+import TaskPrioritization from "./TaskPrioritization";
+import PerformanceTuning from "./PerformanceTuning";
 
 export const tabConfig = [
   { id: "visual", label: "Visual", icon: Network, component: VisualEditor, props: ["services", "onUpdateService", "onDeleteService"] },
   { id: "list", label: "Services", icon: List, component: ServicesList, props: ["services", "onUpdateService", "onDeleteService"] },
+  { id: "tasks", label: "Tasks", icon: CheckSquare, component: TaskPrioritization, props: ["project", "services"] },
+  { id: "discover", label: "Discover", icon: Compass, component: ServiceDiscovery, props: ["project", "services"] },
+  { id: "performance", label: "Performance", icon: Zap, component: PerformanceTuning, props: ["project", "services"] },
   { id: "validate", label: "Validate", icon: Sparkles, component: AIValidator, props: ["project", "services"] },
   { id: "dependencies", label: "Graph", icon: Network, component: DependencyVisualizer, props: ["project", "services"] },
   { id: "refactor", label: "Refactor", icon: Sparkles, component: AIRefactor, props: ["project", "services"] },
@@ -41,7 +46,6 @@ export const tabConfig = [
   { id: "code-gen", label: "Generate", icon: Code, component: CodeGenerator, props: ["project", "services"] },
   { id: "collab", label: "Collab", icon: Users, component: CollaborationHub, props: ["project"] },
   { id: "template-mgmt", label: "Manage", icon: Settings, component: TemplateManager, props: [] },
-  { id: "discover", label: "Discover", icon: Compass, component: ServiceDiscovery, props: ["project", "services"] },
   { id: "ai-assist", label: "AI Assist", icon: Brain, component: AICollaborationAssistant, props: ["project", "services"] },
   { id: "insights", label: "Insights", icon: BarChart3, component: TemplateInsights, props: [] },
   { id: "ai-viz", label: "Visualize", icon: Eye, component: AIArchitectureVisualizer, props: ["project", "services"] },
