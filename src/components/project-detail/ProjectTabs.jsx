@@ -32,6 +32,7 @@ import APIGatewayManager from "./APIGatewayManager";
 import ProjectHealthDashboard from "./ProjectHealthDashboard";
 import AIProjectAssistant from "./AIProjectAssistant";
 import FeatureFlagManager from "./FeatureFlagManager";
+import ServiceScaffoldGenerator from "./ServiceScaffoldGenerator";
 
 export const tabConfig = [
   { id: "assistant", label: "AI Assistant", icon: Bot, component: AIProjectAssistant, props: ["project", "services"] },
@@ -54,6 +55,7 @@ export const tabConfig = [
   { id: "flags", label: "Flags", icon: Flag, component: FeatureFlagManager, props: ["project", "services"] },
   { id: "arch-refine", label: "Refine", icon: Cpu, component: ArchitectureRefiner, props: ["project", "services"] },
   { id: "code-gen", label: "Generate", icon: Code, component: CodeGenerator, props: ["project", "services"] },
+  { id: "scaffold", label: "Scaffold", icon: Rocket, component: ServiceScaffoldGenerator, props: ["project", "services"] },
   { id: "collab", label: "Collab", icon: Users, component: CollaborationHub, props: ["project"] },
   { id: "template-mgmt", label: "Manage", icon: Settings, component: TemplateManager, props: [] },
   { id: "ai-assist", label: "AI Assist", icon: Brain, component: AICollaborationAssistant, props: ["project", "services"] },
