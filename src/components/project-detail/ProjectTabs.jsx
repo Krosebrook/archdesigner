@@ -20,6 +20,7 @@ import CodeGenerator from "./CodeGenerator";
 import CollaborationHub from "./CollaborationHub";
 import TemplateManager from "./TemplateManager";
 import ServiceDiscovery from "./ServiceDiscovery";
+import ServiceMap from "./ServiceMap";
 import AICollaborationAssistant from "./AICollaborationAssistant";
 import TemplateInsights from "./TemplateInsights";
 import AIArchitectureVisualizer from "./AIArchitectureVisualizer";
@@ -41,6 +42,7 @@ export const tabConfig = [
   { id: "list", label: "Services", icon: List, component: ServicesList, props: ["services", "onUpdateService", "onDeleteService"] },
   { id: "tasks", label: "Tasks", icon: CheckSquare, component: TaskPrioritization, props: ["project", "services"] },
   { id: "discover", label: "Discover", icon: Compass, component: ServiceDiscovery, props: ["project", "services"] },
+  { id: "map", label: "Map", icon: Network, component: ServiceMap, props: ["project", "services"] },
   { id: "gateway", label: "API Gateway", icon: Network, component: APIGatewayManager, props: ["project", "services"] },
   { id: "registration", label: "Registration", icon: Code2, component: ServiceRegistrationGenerator, props: ["project", "services"] },
   { id: "performance", label: "Performance", icon: Zap, component: PerformanceTuning, props: ["project", "services"] },
