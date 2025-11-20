@@ -14,7 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
-import { Sparkles, Loader2, RefreshCw, TrendingUp } from "lucide-react";
+import { Sparkles, Loader2, RefreshCw, TrendingUp, Zap } from "lucide-react";
+import { autoOnboardProject } from "./AIProjectOnboarding";
 
 const categories = [
   { value: "desktop", label: "Desktop Application", icon: "🖥️" },
@@ -56,6 +57,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSubmit }) {
   const [projectTemplates, setProjectTemplates] = useState([]);
   const [selectedProjectTemplate, setSelectedProjectTemplate] = useState(null);
   const [isGeneratingFromTemplate, setIsGeneratingFromTemplate] = useState(false);
+  const [enableAIOnboarding, setEnableAIOnboarding] = useState(true);
 
   useEffect(() => {
     if (isOpen) {
@@ -271,7 +273,8 @@ export default function CreateProjectModal({ isOpen, onClose, onSubmit }) {
         icon: formData.icon || selectedCategory?.icon || "🏗️",
         selectedTemplates: selectedTemplates,
         projectTemplateId: selectedProjectTemplate?.id,
-        templateConfig: selectedProjectTemplate
+        templateConfig: selectedProjectTemplate,
+        enableAIOnboarding
       });
       
       // Reset form
@@ -642,6 +645,28 @@ export default function CreateProjectModal({ isOpen, onClose, onSubmit }) {
               </div>
             </div>
           )}
+
+          {/* AI Onboarding Toggle */}
+          <div className="p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border-2 border-indigo-200">
+            <div className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                checked={enableAIOnboarding}
+                onChange={(e) => setEnableAIOnboarding(e.target.checked)}
+                className="mt-1"
+              />
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <Zap className="w-4 h-4 text-indigo-600" />
+                  <span className="font-semibold text-gray-900">AI-Powered Onboarding</span>
+                  <Badge className="bg-indigo-600">Recommended</Badge>
+                </div>
+                <p className="text-sm text-gray-600">
+                  Automatically generate CI/CD configs, feature flags, service discovery, and initial scaffolding
+                </p>
+              </div>
+            </div>
+          </div>
 
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-6 border-t">
