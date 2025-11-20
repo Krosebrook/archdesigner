@@ -1,7 +1,7 @@
 import { 
   Network, List, Sparkles, FileText, Code2, FileCode2, 
   DollarSign, GitBranch, Cpu, Code, Users, Settings, Compass, 
-  Brain, BarChart3, Eye, Rocket, Wand2, CheckSquare, Zap, Activity
+  Brain, BarChart3, Eye, Rocket, Wand2, CheckSquare, Zap, Activity, Bot
 } from "lucide-react";
 
 import VisualEditor from "./VisualEditor";
@@ -30,8 +30,10 @@ import PerformanceTuning from "./PerformanceTuning";
 import ServiceRegistrationGenerator from "./ServiceRegistrationGenerator";
 import APIGatewayManager from "./APIGatewayManager";
 import ProjectHealthDashboard from "./ProjectHealthDashboard";
+import AIProjectAssistant from "./AIProjectAssistant";
 
 export const tabConfig = [
+  { id: "assistant", label: "AI Assistant", icon: Bot, component: AIProjectAssistant, props: ["project", "services"] },
   { id: "health", label: "Health", icon: Activity, component: ProjectHealthDashboard, props: ["project", "services"] },
   { id: "visual", label: "Visual", icon: Network, component: VisualEditor, props: ["services", "onUpdateService", "onDeleteService"] },
   { id: "list", label: "Services", icon: List, component: ServicesList, props: ["services", "onUpdateService", "onDeleteService"] },
