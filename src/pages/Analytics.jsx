@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3, TrendingUp, PieChart, Activity } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
+import PortfolioHealthDashboard from "../components/analytics/PortfolioHealthDashboard";
 
 export default function AnalyticsPage() {
   const [projects, setProjects] = useState([]);
@@ -63,7 +64,10 @@ export default function AnalyticsPage() {
 
   return (
     <div className="p-6 md:p-8">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Portfolio Health Dashboard */}
+        <PortfolioHealthDashboard />
+
         {/* Header */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -71,10 +75,10 @@ export default function AnalyticsPage() {
           className="mb-8"
         >
           <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
-            Analytics Dashboard
+            Detailed Analytics
           </h1>
           <p className="text-gray-600 mt-2 text-lg">
-            Insights into your microservices architecture portfolio
+            Deep dive into your microservices architecture metrics
           </p>
         </motion.div>
 
