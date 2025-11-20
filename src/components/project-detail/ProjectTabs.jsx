@@ -1,7 +1,7 @@
 import { 
   Network, List, Sparkles, FileText, Code2, FileCode2, 
   DollarSign, GitBranch, Cpu, Code, Users, Settings, Compass, 
-  Brain, BarChart3, Eye, Rocket, Wand2, CheckSquare, Zap, Activity, Bot
+  Brain, BarChart3, Eye, Rocket, Wand2, CheckSquare, Zap, Activity, Bot, Flag
 } from "lucide-react";
 
 import VisualEditor from "./VisualEditor";
@@ -31,6 +31,7 @@ import ServiceRegistrationGenerator from "./ServiceRegistrationGenerator";
 import APIGatewayManager from "./APIGatewayManager";
 import ProjectHealthDashboard from "./ProjectHealthDashboard";
 import AIProjectAssistant from "./AIProjectAssistant";
+import FeatureFlagManager from "./FeatureFlagManager";
 
 export const tabConfig = [
   { id: "assistant", label: "AI Assistant", icon: Bot, component: AIProjectAssistant, props: ["project", "services"] },
@@ -50,6 +51,7 @@ export const tabConfig = [
   { id: "api-gen", label: "API", icon: FileCode2, component: APIGenerator, props: ["project", "services"] },
   { id: "cost", label: "Cost", icon: DollarSign, component: CostOptimizer, props: ["project", "services"] },
   { id: "cicd", label: "CI/CD", icon: GitBranch, component: CICDGenerator, props: ["project", "services"] },
+  { id: "flags", label: "Flags", icon: Flag, component: FeatureFlagManager, props: ["project", "services"] },
   { id: "arch-refine", label: "Refine", icon: Cpu, component: ArchitectureRefiner, props: ["project", "services"] },
   { id: "code-gen", label: "Generate", icon: Code, component: CodeGenerator, props: ["project", "services"] },
   { id: "collab", label: "Collab", icon: Users, component: CollaborationHub, props: ["project"] },
