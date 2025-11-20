@@ -9,11 +9,13 @@ import { Code, Loader2, Download, Copy, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 const languages = [
-  { value: "typescript", label: "TypeScript" },
-  { value: "python", label: "Python" },
-  { value: "go", label: "Go" },
-  { value: "java", label: "Java" },
-  { value: "rust", label: "Rust" }
+  { value: "typescript", label: "TypeScript", frameworks: ["Node.js/Express", "NestJS", "Fastify"] },
+  { value: "python", label: "Python", frameworks: ["FastAPI", "Django", "Flask"] },
+  { value: "go", label: "Go", frameworks: ["Gin", "Echo", "Chi"] },
+  { value: "java", label: "Java", frameworks: ["Spring Boot", "Quarkus", "Micronaut"] },
+  { value: "rust", label: "Rust", frameworks: ["Actix", "Rocket", "Axum"] },
+  { value: "javascript", label: "Node.js", frameworks: ["Express", "Koa", "Hapi"] },
+  { value: "csharp", label: "C#", frameworks: [".NET Core", "ASP.NET"] }
 ];
 
 const generationTypes = [
@@ -21,37 +23,87 @@ const generationTypes = [
   { value: "endpoint", label: "API Endpoint" },
   { value: "model", label: "Data Model" },
   { value: "test", label: "Test Suite" },
-  { value: "full_service", label: "Full Service" }
+  { value: "full_service", label: "Full Service" },
+  { value: "dockerfile", label: "Dockerfile + Docker Compose" }
+];
+
+const architecturalPatterns = [
+  { value: "microservices", label: "Microservices" },
+  { value: "monolithic", label: "Monolithic" },
+  { value: "serverless", label: "Serverless" },
+  { value: "event-driven", label: "Event-Driven" },
+  { value: "cqrs", label: "CQRS" },
+  { value: "layered", label: "Layered Architecture" }
+];
+
+const codeStyles = [
+  { value: "clean", label: "Clean Code" },
+  { value: "functional", label: "Functional" },
+  { value: "oop", label: "Object-Oriented" },
+  { value: "domain-driven", label: "Domain-Driven Design" }
+];
+
+const cicdPlatforms = [
+  { value: "github", label: "GitHub Actions" },
+  { value: "gitlab", label: "GitLab CI" },
+  { value: "jenkins", label: "Jenkins" },
+  { value: "circleci", label: "CircleCI" },
+  { value: "azure", label: "Azure DevOps" }
 ];
 
 export default function CodeGenerator({ project, services }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState("typescript");
+  const [selectedFramework, setSelectedFramework] = useState("Node.js/Express");
   const [selectedType, setSelectedType] = useState("boilerplate");
   const [selectedService, setSelectedService] = useState("");
+  const [selectedPattern, setSelectedPattern] = useState("microservices");
+  const [selectedCodeStyle, setSelectedCodeStyle] = useState("clean");
+  const [selectedCICD, setSelectedCICD] = useState("github");
+  const [includeCICD, setIncludeCICD] = useState(false);
   const [requirements, setRequirements] = useState("");
   const [generatedCode, setGeneratedCode] = useState(null);
   const [copied, setCopied] = useState(false);
+
+  const currentLanguage = languages.find(l => l.value === selectedLanguage);
 
   const generateCode = async () => {
     setIsGenerating(true);
     try {
       const service = services.find(s => s.id === selectedService);
       
-      const prompt = `Generate ${selectedType} code in ${selectedLanguage} for a microservice.
+      const prompt = `Generate ${selectedType} code in ${selectedLanguage} using ${selectedFramework} framework for a ${selectedPattern} architecture.
 
 PROJECT: ${project.name}
 ${service ? `SERVICE: ${service.name} - ${service.description}` : ''}
+ARCHITECTURAL PATTERN: ${selectedPattern}
+CODE STYLE: ${selectedCodeStyle}
+FRAMEWORK: ${selectedFramework}
 REQUIREMENTS: ${requirements}
 
 Generate complete, production-ready code with:
-- Proper structure and organization
-- Error handling
-- Type safety
-- Comments
-- Best practices for ${selectedLanguage}
+- Proper structure following ${selectedPattern} architecture
+- ${selectedCodeStyle} code style and principles
+- Error handling and validation
+- Type safety (if applicable)
+- Comprehensive comments
+- Best practices for ${selectedLanguage} and ${selectedFramework}
+- Security considerations
+- Performance optimizations
+- Logging and monitoring hooks
+${includeCICD ? `\n- CI/CD pipeline configuration for ${selectedCICD}` : ''}
 
-Return as JSON with file_structure array (path and content for each file) and setup_instructions.`;
+${includeCICD ? `Include CI/CD configuration that:
+- Runs tests automatically
+- Builds Docker images
+- Deploys to staging/production
+- Includes health checks
+- Has rollback capabilities` : ''}
+
+Return as JSON with:
+- file_structure: array of {path, content} for all code files
+- setup_instructions: detailed setup and deployment instructions
+${includeCICD ? '- cicd_config: CI/CD pipeline configuration' : ''}`;
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt: prompt,
@@ -68,7 +120,8 @@ Return as JSON with file_structure array (path and content for each file) and se
                 }
               }
             },
-            setup_instructions: { type: "string" }
+            setup_instructions: { type: "string" },
+            cicd_config: { type: "string" }
           }
         }
       });
@@ -78,9 +131,10 @@ Return as JSON with file_structure array (path and content for each file) and se
         service_id: selectedService || null,
         generation_type: selectedType,
         language: selectedLanguage,
-        framework: selectedLanguage === "typescript" ? "Node.js/Express" : "Standard",
+        framework: selectedFramework,
         file_structure: result.file_structure || [],
-        setup_instructions: result.setup_instructions || ""
+        setup_instructions: result.setup_instructions || "",
+        generated_code: result.cicd_config || ""
       });
 
       setGeneratedCode(result);
@@ -123,12 +177,25 @@ Return as JSON with file_structure array (path and content for each file) and se
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid md:grid-cols-3 gap-4">
-            <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+          <div className="grid md:grid-cols-4 gap-4">
+            <Select value={selectedLanguage} onValueChange={(val) => {
+              setSelectedLanguage(val);
+              const lang = languages.find(l => l.value === val);
+              if (lang?.frameworks?.[0]) setSelectedFramework(lang.frameworks[0]);
+            }}>
               <SelectTrigger><SelectValue placeholder="Language" /></SelectTrigger>
               <SelectContent>
                 {languages.map(lang => (
                   <SelectItem key={lang.value} value={lang.value}>{lang.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={selectedFramework} onValueChange={setSelectedFramework}>
+              <SelectTrigger><SelectValue placeholder="Framework" /></SelectTrigger>
+              <SelectContent>
+                {currentLanguage?.frameworks?.map(fw => (
+                  <SelectItem key={fw} value={fw}>{fw}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -153,8 +220,53 @@ Return as JSON with file_structure array (path and content for each file) and se
             </Select>
           </div>
 
+          <div className="grid md:grid-cols-2 gap-4">
+            <Select value={selectedPattern} onValueChange={setSelectedPattern}>
+              <SelectTrigger><SelectValue placeholder="Architecture Pattern" /></SelectTrigger>
+              <SelectContent>
+                {architecturalPatterns.map(pattern => (
+                  <SelectItem key={pattern.value} value={pattern.value}>{pattern.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={selectedCodeStyle} onValueChange={setSelectedCodeStyle}>
+              <SelectTrigger><SelectValue placeholder="Code Style" /></SelectTrigger>
+              <SelectContent>
+                {codeStyles.map(style => (
+                  <SelectItem key={style.value} value={style.value}>{style.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <input
+              type="checkbox"
+              id="includeCICD"
+              checked={includeCICD}
+              onChange={(e) => setIncludeCICD(e.target.checked)}
+              className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+            />
+            <label htmlFor="includeCICD" className="text-sm font-medium text-gray-900 flex-1">
+              Include CI/CD Pipeline Configuration
+            </label>
+            {includeCICD && (
+              <Select value={selectedCICD} onValueChange={setSelectedCICD}>
+                <SelectTrigger className="w-48 bg-white">
+                  <SelectValue placeholder="CI/CD Platform" />
+                </SelectTrigger>
+                <SelectContent>
+                  {cicdPlatforms.map(platform => (
+                    <SelectItem key={platform.value} value={platform.value}>{platform.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+
           <Textarea
-            placeholder="Describe what you need... (e.g., REST API with CRUD operations for users)"
+            placeholder="Describe what you need... (e.g., REST API with CRUD operations for users, authentication, rate limiting)"
             value={requirements}
             onChange={(e) => setRequirements(e.target.value)}
             className="h-24"
@@ -223,6 +335,28 @@ Return as JSON with file_structure array (path and content for each file) and se
                   <CardContent>
                     <pre className="text-sm text-gray-700 whitespace-pre-wrap">
                       {generatedCode.setup_instructions}
+                    </pre>
+                  </CardContent>
+                </Card>
+              )}
+
+              {generatedCode.cicd_config && (
+                <Card className="bg-green-50 border-green-200">
+                  <CardHeader>
+                    <div className="flex justify-between items-center">
+                      <CardTitle className="text-sm">CI/CD Pipeline Configuration</CardTitle>
+                      <Button
+                        onClick={() => copyToClipboard(generatedCode.cicd_config)}
+                        variant="ghost"
+                        size="sm"
+                      >
+                        {copied ? <CheckCircle2 className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <pre className="bg-gray-900 text-gray-100 p-4 rounded text-xs overflow-x-auto max-h-96">
+                      {generatedCode.cicd_config}
                     </pre>
                   </CardContent>
                 </Card>
