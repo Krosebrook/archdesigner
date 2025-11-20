@@ -18,7 +18,7 @@ export default function ProjectDetail() {
   const { project, services, isLoading, addService, updateService, deleteService, createFromTemplate } = useProject(projectId);
   const [showAddService, setShowAddService] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
-  const [activeTab, setActiveTab] = useState("visual");
+  const [activeTab, setActiveTab] = useState("health");
 
   const handleAddService = async (serviceData) => {
     await addService(serviceData);
