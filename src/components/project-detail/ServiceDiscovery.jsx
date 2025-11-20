@@ -76,7 +76,13 @@ For each suggested service provide:
 - cost_implications: Brief description of infrastructure/operational costs
 - performance_impact: Expected impact on system performance
 
+Also analyze communication patterns between services:
+- For each service-to-service relationship, suggest optimal communication pattern
+- Choose from: REST API, gRPC, GraphQL, Message Queue (RabbitMQ/Kafka), WebSocket, Event Bus
+- Provide rationale based on: data volume, latency requirements, reliability needs, scalability
+
 Also provide:
+- communication_patterns: Array of {from_service, to_service, pattern, rationale, protocol}
 - gaps_identified: Array of architecture gaps
 - architecture_recommendations: General recommendations
 
@@ -104,6 +110,19 @@ Return as JSON.`;
                 }
               }
             },
+            communication_patterns: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  from_service: { type: "string" },
+                  to_service: { type: "string" },
+                  pattern: { type: "string" },
+                  rationale: { type: "string" },
+                  protocol: { type: "string" }
+                }
+              }
+            },
             gaps_identified: { type: "array", items: { type: "string" } },
             architecture_recommendations: { type: "array", items: { type: "string" } }
           }
@@ -113,6 +132,7 @@ Return as JSON.`;
       const newDiscovery = await base44.entities.ServiceDiscovery.create({
         project_id: project.id,
         suggested_services: result.suggested_services || [],
+        communication_patterns: result.communication_patterns || [],
         gaps_identified: result.gaps_identified || [],
         architecture_recommendations: result.architecture_recommendations || []
       });
@@ -296,8 +316,39 @@ Return as JSON.`;
               </CardContent>
             </Card>
           )}
-        </motion.div>
-      )}
-    </div>
-  );
-}
+
+          {latestDiscovery.communication_patterns && latestDiscovery.communication_patterns.length > 0 && (
+            <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200 mt-4">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-blue-900">
+                  <Zap className="w-5 h-5" />
+                  Communication Patterns
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {latestDiscovery.communication_patterns.map((pattern, i) => (
+                    <div key={i} className="bg-white rounded-lg p-3 border border-blue-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge className="bg-blue-600 text-white">{pattern.from_service}</Badge>
+                        <span className="text-blue-400">→</span>
+                        <Badge className="bg-cyan-600 text-white">{pattern.to_service}</Badge>
+                      </div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge variant="outline" className="bg-green-50 text-green-800 border-green-300">
+                          {pattern.protocol}
+                        </Badge>
+                        <Badge variant="outline">{pattern.pattern}</Badge>
+                      </div>
+                      <p className="text-sm text-gray-700 mt-2">{pattern.rationale}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          </motion.div>
+          )}
+          </div>
+          );
+          }

@@ -27,12 +27,14 @@ import CICDAutomationEngine from "./CICDAutomationEngine";
 import AdvancedTemplateIntelligence from "./AdvancedTemplateIntelligence";
 import TaskPrioritization from "./TaskPrioritization";
 import PerformanceTuning from "./PerformanceTuning";
+import ServiceRegistrationGenerator from "./ServiceRegistrationGenerator";
 
 export const tabConfig = [
   { id: "visual", label: "Visual", icon: Network, component: VisualEditor, props: ["services", "onUpdateService", "onDeleteService"] },
   { id: "list", label: "Services", icon: List, component: ServicesList, props: ["services", "onUpdateService", "onDeleteService"] },
   { id: "tasks", label: "Tasks", icon: CheckSquare, component: TaskPrioritization, props: ["project", "services"] },
   { id: "discover", label: "Discover", icon: Compass, component: ServiceDiscovery, props: ["project", "services"] },
+  { id: "registration", label: "Registration", icon: Code2, component: ServiceRegistrationGenerator, props: ["project", "services"] },
   { id: "performance", label: "Performance", icon: Zap, component: PerformanceTuning, props: ["project", "services"] },
   { id: "validate", label: "Validate", icon: Sparkles, component: AIValidator, props: ["project", "services"] },
   { id: "dependencies", label: "Graph", icon: Network, component: DependencyVisualizer, props: ["project", "services"] },
