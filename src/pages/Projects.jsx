@@ -34,12 +34,47 @@ export default function ProjectsPage() {
 
   const handleCreateProject = async (projectData) => {
     try {
-      const { selectedTemplates, ...projectFields } = projectData;
+      const { selectedTemplates, projectTemplateId, templateConfig, ...projectFields } = projectData;
       
       // Create project
       const newProject = await base44.entities.Project.create(projectFields);
       
-      // If templates were selected, create services from them
+      // If using a project template, create services and tasks from it
+      if (templateConfig && templateConfig.default_services) {
+        const servicePromises = templateConfig.default_services.map(serviceConfig =>
+          base44.entities.Service.create({
+            project_id: newProject.id,
+            name: serviceConfig.name,
+            description: serviceConfig.description,
+            category: serviceConfig.category,
+            technologies: serviceConfig.technologies || [],
+            apis: [],
+            position: { x: Math.random() * 400 + 100, y: Math.random() * 300 + 100 }
+          })
+        );
+        await Promise.all(servicePromises);
+
+        // Create initial tasks from template
+        if (templateConfig.default_tasks) {
+          const taskPromises = templateConfig.default_tasks.map(taskConfig =>
+            base44.entities.Task.create({
+              project_id: newProject.id,
+              title: taskConfig.title,
+              description: taskConfig.description,
+              priority_level: taskConfig.priority_level,
+              status: "backlog"
+            })
+          );
+          await Promise.all(taskPromises);
+        }
+
+        // Update project counts
+        await base44.entities.Project.update(newProject.id, {
+          services_count: templateConfig.default_services.length
+        });
+      }
+      
+      // If service templates were selected, create services from them
       if (selectedTemplates && selectedTemplates.length > 0) {
         const templates = await base44.entities.ServiceTemplate.list();
         const selectedTemplateData = templates.filter(t => selectedTemplates.includes(t.id));
@@ -68,8 +103,10 @@ export default function ProjectsPage() {
         await Promise.all(updatePromises);
         
         // Update project service count
+        const currentCount = await base44.entities.Project.list();
+        const project = currentCount.find(p => p.id === newProject.id);
         await base44.entities.Project.update(newProject.id, {
-          services_count: selectedTemplates.length
+          services_count: (project?.services_count || 0) + selectedTemplates.length
         });
       }
       

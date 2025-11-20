@@ -4,10 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Layers, Edit, Trash2, Copy, TrendingUp, Clock } from "lucide-react";
+import { Layers, Edit, Trash2, Copy, TrendingUp, Clock, Plus } from "lucide-react";
 import { motion } from "framer-motion";
+import ProjectTemplateCreator from "./ProjectTemplateCreator";
 
 export default function TemplateManager() {
+  const [showCreator, setShowCreator] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState(null);
   const [templates, setTemplates] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -75,17 +78,42 @@ export default function TemplateManager() {
     return matchesSearch && matchesCategory;
   });
 
+  if (showCreator || editingTemplate) {
+    return (
+      <ProjectTemplateCreator
+        existingTemplate={editingTemplate}
+        onSave={() => {
+          setShowCreator(false);
+          setEditingTemplate(null);
+          loadTemplates();
+        }}
+        onCancel={() => {
+          setShowCreator(false);
+          setEditingTemplate(null);
+        }}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-0 shadow-lg">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Layers className="w-5 h-5 text-blue-600" />
-            Advanced Template Management
-          </CardTitle>
-          <p className="text-sm text-gray-600 mt-1">
-            Manage, edit, and share your custom project templates
-          </p>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Layers className="w-5 h-5 text-blue-600" />
+                Project Template Management
+              </CardTitle>
+              <p className="text-sm text-gray-600 mt-1">
+                Create AI-powered templates for rapid project scaffolding
+              </p>
+            </div>
+            <Button onClick={() => setShowCreator(true)} className="bg-blue-600 text-white">
+              <Plus className="w-4 h-4 mr-2" />
+              New Template
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex gap-3">
@@ -175,6 +203,9 @@ export default function TemplateManager() {
                     className="flex-1"
                   >
                     {template.is_public ? "Public" : "Private"}
+                  </Button>
+                  <Button onClick={() => setEditingTemplate(template)} variant="outline" size="sm">
+                    <Edit className="w-4 h-4" />
                   </Button>
                   <Button onClick={() => duplicateTemplate(template)} variant="outline" size="sm">
                     <Copy className="w-4 h-4" />

@@ -53,6 +53,9 @@ export default function CreateProjectModal({ isOpen, onClose, onSubmit }) {
   const [topTemplates, setTopTemplates] = useState([]);
   const [suggestedServices, setSuggestedServices] = useState([]);
   const [selectedTemplates, setSelectedTemplates] = useState([]);
+  const [projectTemplates, setProjectTemplates] = useState([]);
+  const [selectedProjectTemplate, setSelectedProjectTemplate] = useState(null);
+  const [isGeneratingFromTemplate, setIsGeneratingFromTemplate] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -78,6 +81,10 @@ export default function CreateProjectModal({ isOpen, onClose, onSubmit }) {
       const templates = await base44.entities.ServiceTemplate.list();
       const sortedTemplates = templates.sort((a, b) => (b.usage_count || 0) - (a.usage_count || 0)).slice(0, 10);
       setTopTemplates(sortedTemplates);
+
+      // Load project templates
+      const projTemplates = await base44.entities.ProjectTemplate.filter({ is_public: true });
+      setProjectTemplates(projTemplates.sort((a, b) => (b.usage_count || 0) - (a.usage_count || 0)));
     } catch (error) {
       console.error("Error loading top data:", error);
     }
@@ -220,6 +227,38 @@ export default function CreateProjectModal({ isOpen, onClose, onSubmit }) {
     );
   };
 
+  const generateFromTemplate = async (template) => {
+    setIsGeneratingFromTemplate(true);
+    setSelectedProjectTemplate(template);
+
+    try {
+      // Pre-fill form with template data
+      setFormData(prev => ({
+        ...prev,
+        name: template.name.replace(/Template$/i, '').trim(),
+        description: template.description,
+        category: template.category,
+        icon: template.icon || "🏗️"
+      }));
+
+      // Pre-select service templates if they match
+      if (template.default_services) {
+        const matchingTemplateIds = topTemplates
+          .filter(st => template.default_services.some(ds => ds.name === st.name))
+          .map(st => st.id);
+        setSelectedTemplates(matchingTemplateIds);
+      }
+
+      // Update template usage count
+      await base44.entities.ProjectTemplate.update(template.id, {
+        usage_count: (template.usage_count || 0) + 1
+      });
+    } catch (error) {
+      console.error("Error generating from template:", error);
+    }
+    setIsGeneratingFromTemplate(false);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -230,7 +269,9 @@ export default function CreateProjectModal({ isOpen, onClose, onSubmit }) {
       await onSubmit({
         ...formData,
         icon: formData.icon || selectedCategory?.icon || "🏗️",
-        selectedTemplates: selectedTemplates
+        selectedTemplates: selectedTemplates,
+        projectTemplateId: selectedProjectTemplate?.id,
+        templateConfig: selectedProjectTemplate
       });
       
       // Reset form
@@ -247,6 +288,7 @@ export default function CreateProjectModal({ isOpen, onClose, onSubmit }) {
       });
       setSelectedTemplates([]);
       setSuggestedServices([]);
+      setSelectedProjectTemplate(null);
     } catch (error) {
       console.error("Error creating project:", error);
     }
@@ -279,6 +321,54 @@ export default function CreateProjectModal({ isOpen, onClose, onSubmit }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
+          {/* Project Templates */}
+          {projectTemplates.length > 0 && (
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 border-2 border-purple-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-purple-600" />
+                Start from AI-Powered Template
+              </h3>
+              <div className="grid md:grid-cols-2 gap-3 max-h-80 overflow-y-auto">
+                {projectTemplates.map(template => (
+                  <Card 
+                    key={template.id}
+                    className={`cursor-pointer transition-all hover:shadow-lg ${
+                      selectedProjectTemplate?.id === template.id
+                        ? 'border-2 border-purple-500 bg-purple-50 shadow-lg'
+                        : 'hover:border-purple-300'
+                    }`}
+                    onClick={() => generateFromTemplate(template)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="text-3xl">{template.icon}</span>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-sm text-gray-900">{template.name}</h4>
+                          <div className="flex gap-2 mt-1">
+                            <Badge variant="outline" className="text-xs">{template.category}</Badge>
+                            <Badge variant="outline" className="text-xs">{template.complexity_level}</Badge>
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-600 line-clamp-2 mb-2">{template.description}</p>
+                      {template.default_services && (
+                        <p className="text-xs text-purple-700 font-medium">
+                          {template.default_services.length} services • {template.architecture_pattern}
+                        </p>
+                      )}
+                      {template.usage_count > 0 && (
+                        <Badge className="mt-2 bg-purple-100 text-purple-800 text-xs">
+                          <TrendingUp className="w-3 h-3 mr-1" />
+                          {template.usage_count} uses
+                        </Badge>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Basic Information */}
           <div className="space-y-4">
             <div>
