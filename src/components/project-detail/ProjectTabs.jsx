@@ -28,12 +28,14 @@ import AdvancedTemplateIntelligence from "./AdvancedTemplateIntelligence";
 import TaskPrioritization from "./TaskPrioritization";
 import PerformanceTuning from "./PerformanceTuning";
 import ServiceRegistrationGenerator from "./ServiceRegistrationGenerator";
+import APIGatewayManager from "./APIGatewayManager";
 
 export const tabConfig = [
   { id: "visual", label: "Visual", icon: Network, component: VisualEditor, props: ["services", "onUpdateService", "onDeleteService"] },
   { id: "list", label: "Services", icon: List, component: ServicesList, props: ["services", "onUpdateService", "onDeleteService"] },
   { id: "tasks", label: "Tasks", icon: CheckSquare, component: TaskPrioritization, props: ["project", "services"] },
   { id: "discover", label: "Discover", icon: Compass, component: ServiceDiscovery, props: ["project", "services"] },
+  { id: "gateway", label: "API Gateway", icon: Network, component: APIGatewayManager, props: ["project", "services"] },
   { id: "registration", label: "Registration", icon: Code2, component: ServiceRegistrationGenerator, props: ["project", "services"] },
   { id: "performance", label: "Performance", icon: Zap, component: PerformanceTuning, props: ["project", "services"] },
   { id: "validate", label: "Validate", icon: Sparkles, component: AIValidator, props: ["project", "services"] },
