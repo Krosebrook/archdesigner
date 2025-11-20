@@ -34,10 +34,19 @@ export default function ProjectsPage() {
 
   const handleCreateProject = async (projectData) => {
     try {
-      const { selectedTemplates, projectTemplateId, templateConfig, ...projectFields } = projectData;
+      const { selectedTemplates, projectTemplateId, templateConfig, enableAIOnboarding, ...projectFields } = projectData;
       
       // Create project
       const newProject = await base44.entities.Project.create(projectFields);
+      
+      // Run AI onboarding if enabled and no template selected
+      if (enableAIOnboarding && !templateConfig && selectedTemplates.length === 0) {
+        const { autoOnboardProject } = await import("../components/projects/AIProjectOnboarding");
+        await autoOnboardProject(newProject);
+        setShowCreateModal(false);
+        loadProjects();
+        return;
+      }
       
       // If using a project template, create services and tasks from it
       if (templateConfig && templateConfig.default_services) {
