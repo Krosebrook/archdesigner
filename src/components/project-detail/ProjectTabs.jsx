@@ -40,6 +40,7 @@ import CodeRefactoringHub from "../code-refactor/CodeRefactoringHub";
 import CICDIntelligenceHub from "../cicd/CICDIntelligenceHub";
 import DocumentationIntelligenceHub from "../documentation/DocumentationIntelligenceHub";
 import SecurityIntelligenceHub from "../security/SecurityIntelligenceHub";
+import IntegrationHub from "../integrations/IntegrationHub";
 
 export const tabConfig = [
   { id: "assistant", label: "AI Assistant", icon: Bot, component: AIProjectAssistant, props: ["project", "services"] },
@@ -64,6 +65,7 @@ export const tabConfig = [
   { id: "cicd", label: "CI/CD", icon: GitBranch, component: CICDGenerator, props: ["project", "services"] },
   { id: "cicd-intelligence", label: "CI/CD AI", icon: Activity, component: CICDIntelligenceHub, props: ["project", "services"] },
   { id: "security", label: "Security", icon: Shield, component: SecurityIntelligenceHub, props: ["project", "services"] },
+  { id: "integrations", label: "Integrations", icon: Zap, component: IntegrationHub, props: ["project"] },
   { id: "flags", label: "Flags", icon: Flag, component: FeatureFlagManager, props: ["project", "services"] },
   { id: "arch-refine", label: "Refine", icon: Cpu, component: ArchitectureRefiner, props: ["project", "services"] },
   { id: "code-gen", label: "Generate", icon: Code, component: CodeGenerator, props: ["project", "services"] },
