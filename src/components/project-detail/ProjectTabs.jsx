@@ -36,6 +36,7 @@ import FeatureFlagManager from "./FeatureFlagManager";
 import ServiceScaffoldGenerator from "./ServiceScaffoldGenerator";
 import KnowledgeBaseHub from "../knowledge-base/KnowledgeBaseHub";
 import CodeScaffoldingHub from "../code-scaffold/CodeScaffoldingHub";
+import CodeRefactoringHub from "../code-refactor/CodeRefactoringHub";
 
 export const tabConfig = [
   { id: "assistant", label: "AI Assistant", icon: Bot, component: AIProjectAssistant, props: ["project", "services"] },
@@ -51,7 +52,7 @@ export const tabConfig = [
   { id: "performance", label: "Performance", icon: Zap, component: PerformanceTuning, props: ["project", "services"] },
   { id: "validate", label: "Validate", icon: Sparkles, component: AIValidator, props: ["project", "services"] },
   { id: "dependencies", label: "Graph", icon: Network, component: DependencyVisualizer, props: ["project", "services"] },
-  { id: "refactor", label: "Refactor", icon: Sparkles, component: AIRefactor, props: ["project", "services"] },
+  { id: "refactor", label: "Refactor", icon: RefreshCw, component: CodeRefactoringHub, props: ["project", "services"] },
   { id: "documentation", label: "Docs", icon: FileText, component: AIDocGenerator, props: ["project", "services"] },
   { id: "code-review", label: "Review", icon: Code2, component: AICodeReview, props: ["project", "services"] },
   { id: "api-gen", label: "API", icon: FileCode2, component: APIGenerator, props: ["project", "services"] },
