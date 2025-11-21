@@ -5,6 +5,7 @@ import { AnimatedHero } from "../shared/AnimatedHero";
 import { VulnerabilityScanner } from "./VulnerabilityScanner";
 import { CICDSecurityAuditor } from "./CICDSecurityAuditor";
 import { DeploymentSecurityAnalyzer } from "./DeploymentSecurityAnalyzer";
+import { SecurityFindingsPanel } from "../integrations/SecurityFindingsPanel";
 
 export default function SecurityIntelligenceHub({ project, services }) {
   return (
@@ -16,7 +17,9 @@ export default function SecurityIntelligenceHub({ project, services }) {
         gradient="from-red-900 via-orange-900 to-yellow-900"
       />
 
-      <Tabs defaultValue="vulnerabilities">
+      <SecurityFindingsPanel project={project} />
+
+      <Tabs defaultValue="vulnerabilities" className="mt-6">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="vulnerabilities">
             <Code className="w-4 h-4 mr-2" />

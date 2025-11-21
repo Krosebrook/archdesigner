@@ -127,6 +127,22 @@ Provide detailed findings with severity and remediation.`,
       );
 
       setAudit(result);
+
+      // Save findings to database
+      if (result.findings?.length > 0) {
+        const findings = result.findings.map(finding => ({
+          project_id: project.id,
+          source: "cicd_audit",
+          title: finding.title,
+          severity: finding.severity?.toLowerCase() || "medium",
+          category: finding.category,
+          description: `${finding.current_state} - Risk: ${finding.risk}`,
+          remediation: finding.recommendation,
+          status: "open"
+        }));
+
+        await base44.entities.SecurityFinding.bulkCreate(findings);
+      }
     } catch (error) {
       console.error("CI/CD audit error:", error);
     }

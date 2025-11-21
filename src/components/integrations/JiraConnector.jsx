@@ -38,11 +38,12 @@ export const JiraConnector = ({ project, connection, onUpdate }) => {
     
     setLoading(true);
     try {
-      // Create Jira issues for critical security findings
-      const findings = await base44.entities.SecurityFinding?.filter?.({ 
+      // Fetch critical security findings
+      const findings = await base44.entities.SecurityFinding.filter({ 
         project_id: project.id,
-        severity: "critical"
-      }) || [];
+        severity: "critical",
+        status: "open"
+      });
 
       // Simulate creating Jira tickets
       const tickets = findings.map(finding => ({
@@ -52,11 +53,21 @@ export const JiraConnector = ({ project, connection, onUpdate }) => {
         labels: ["security", "vulnerability"]
       }));
 
+      // Update findings with external ticket reference
+      const updates = findings.map((finding, i) => 
+        base44.entities.SecurityFinding.update(finding.id, {
+          external_ticket_id: `PROJ-${Math.floor(Math.random() * 10000)}`,
+          status: "in_progress"
+        })
+      );
+      await Promise.all(updates);
+
       await base44.entities.IntegrationConnection.update(connection.id, {
         sync_status: {
           message: `Synced ${tickets.length} security findings to Jira`,
           last_sync: new Date().toISOString()
-        }
+        },
+        last_sync: new Date().toISOString()
       });
     } catch (error) {
       console.error("Sync error:", error);

@@ -119,6 +119,26 @@ Provide risk assessment and mitigation strategies.`,
       );
 
       setAnalysis(result);
+
+      // Save risk categories as findings
+      if (result.risk_categories?.length > 0) {
+        const findings = result.risk_categories.flatMap(cat => 
+          cat.issues?.map(issue => ({
+            project_id: project.id,
+            source: "deployment_analysis",
+            title: `${cat.category}: ${issue.substring(0, 100)}`,
+            severity: cat.risk_level?.toLowerCase() || "medium",
+            category: cat.category,
+            description: issue,
+            remediation: cat.mitigations?.join(". ") || "",
+            status: "open"
+          })) || []
+        );
+
+        if (findings.length > 0) {
+          await base44.entities.SecurityFinding.bulkCreate(findings);
+        }
+      }
     } catch (error) {
       console.error("Deployment security analysis error:", error);
     }

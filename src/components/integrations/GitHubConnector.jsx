@@ -66,7 +66,20 @@ Provide:
         sync_status: {
           message: "Repository analyzed successfully",
           last_analysis: analysis
-        }
+        },
+        last_sync: new Date().toISOString()
+      });
+
+      // Save to Knowledge Base
+      await base44.entities.KnowledgeBase.create({
+        project_id: project.id,
+        title: `Repository Analysis: ${repoUrl.split('/').slice(-1)[0]}`,
+        content: JSON.stringify(analysis, null, 2),
+        category: "analysis",
+        tags: ["github", "repository", "auto-generated"],
+        auto_generated: true,
+        source_entity: "IntegrationConnection",
+        source_id: connection.id
       });
     } catch (error) {
       console.error("Repository analysis error:", error);
