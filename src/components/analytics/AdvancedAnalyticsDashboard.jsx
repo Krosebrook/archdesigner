@@ -1,15 +1,30 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart3, TrendingUp, Shield, Code, Activity, Download } from "lucide-react";
 import { AnimatedHero } from "../shared/AnimatedHero";
+import { ErrorBoundary } from "../shared/ErrorBoundary";
 import { MetricsOverview } from "./MetricsOverview";
 import { TrendForecasting } from "./TrendForecasting";
 import { SecurityPosture } from "./SecurityPosture";
 import { APIPerformance } from "./APIPerformance";
 import { CustomReports } from "./CustomReports";
 
+/**
+ * AdvancedAnalyticsDashboard Component
+ * 
+ * Unified analytics dashboard integrating metrics from Security, API, CI/CD, and Task systems.
+ * Provides comprehensive insights through:
+ * - Real-time metrics overview
+ * - AI-powered trend forecasting
+ * - Security posture analysis
+ * - API performance monitoring
+ * - Custom report generation
+ * 
+ * @param {Object} props
+ * @param {Object} props.project - The current project object
+ * @param {Array} props.services - Array of services in the project
+ */
 export default function AdvancedAnalyticsDashboard({ project, services }) {
   const [analytics, setAnalytics] = useState({
     security: [],
@@ -36,26 +51,36 @@ export default function AdvancedAnalyticsDashboard({ project, services }) {
 
       setAnalytics({
         security,
-        api: { integrations: apiIntegrations, analytics: apiAnalytics },
+        api: { integrations: apiIntegrations, analytics: apiAnalytics.filter(a => 
+          apiIntegrations.some(i => i.id === a.integration_id)
+        )},
         cicd,
         tasks
       });
     } catch (error) {
       console.error("Error loading analytics:", error);
+      setAnalytics({
+        security: [],
+        api: { integrations: [], analytics: [] },
+        cicd: [],
+        tasks: []
+      });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
-    <div className="space-y-6">
-      <AnimatedHero
-        icon={BarChart3}
-        title="Advanced Analytics Dashboard"
-        description="Unified metrics, trend analysis, and forecasting across security, APIs, and CI/CD"
-        gradient="from-slate-900 via-purple-900 to-indigo-900"
-      />
+    <ErrorBoundary>
+      <div className="space-y-6">
+        <AnimatedHero
+          icon={BarChart3}
+          title="Advanced Analytics Dashboard"
+          description="Unified metrics, trend analysis, and forecasting across security, APIs, and CI/CD"
+          gradient="from-slate-900 via-purple-900 to-indigo-900"
+        />
 
-      <Tabs defaultValue="overview" className="space-y-6">
+        <Tabs defaultValue="overview" className="space-y-6">
         <TabsList className="grid w-full grid-cols-5 bg-gradient-to-r from-slate-100 to-blue-50">
           <TabsTrigger value="overview" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white">
             <Activity className="w-4 h-4 mr-2" />
@@ -98,7 +123,8 @@ export default function AdvancedAnalyticsDashboard({ project, services }) {
         <TabsContent value="reports">
           <CustomReports project={project} analytics={analytics} services={services} />
         </TabsContent>
-      </Tabs>
-    </div>
+        </Tabs>
+      </div>
+    </ErrorBoundary>
   );
 }
