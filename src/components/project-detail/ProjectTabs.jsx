@@ -1,7 +1,7 @@
 import { 
   Network, List, Sparkles, FileText, Code2, FileCode2, 
   DollarSign, GitBranch, Cpu, Code, Users, Settings, Compass, 
-  Brain, BarChart3, Eye, Rocket, Wand2, CheckSquare, Zap, Activity, Bot, Flag, BookOpen, RefreshCw
+  Brain, BarChart3, Eye, Rocket, Wand2, CheckSquare, Zap, Activity, Bot, Flag, BookOpen, RefreshCw, Shield
 } from "lucide-react";
 
 import VisualEditor from "./VisualEditor";
