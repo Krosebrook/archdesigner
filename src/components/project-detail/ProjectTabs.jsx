@@ -34,9 +34,11 @@ import ProjectHealthDashboard from "./ProjectHealthDashboard";
 import AIProjectAssistant from "./AIProjectAssistant";
 import FeatureFlagManager from "./FeatureFlagManager";
 import ServiceScaffoldGenerator from "./ServiceScaffoldGenerator";
+import KnowledgeBaseHub from "../knowledge-base/KnowledgeBaseHub";
 
 export const tabConfig = [
   { id: "assistant", label: "AI Assistant", icon: Bot, component: AIProjectAssistant, props: ["project", "services"] },
+  { id: "knowledge", label: "Knowledge Base", icon: BookOpen, component: KnowledgeBaseHub, props: ["project", "services"] },
   { id: "health", label: "Health", icon: Activity, component: ProjectHealthDashboard, props: ["project", "services"] },
   { id: "visual", label: "Visual", icon: Network, component: VisualEditor, props: ["services", "onUpdateService", "onDeleteService"] },
   { id: "list", label: "Services", icon: List, component: ServicesList, props: ["services", "onUpdateService", "onDeleteService"] },
