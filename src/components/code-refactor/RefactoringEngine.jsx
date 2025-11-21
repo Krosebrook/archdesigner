@@ -8,7 +8,7 @@ import { Loader2, RefreshCw, Code2, GitCompare, CheckCircle2, ArrowRight } from 
 import { motion } from "framer-motion";
 import { invokeLLM } from "../shared/AILLMProvider";
 import { useCopyToClipboard, downloadFile } from "../shared/FileActions";
-import ReactDiffViewer from 'react-diff-viewer-continued';
+
 
 export const RefactoringEngine = ({ smell, originalCode, project }) => {
   const [refactoring, setRefactoring] = useState(false);
@@ -217,15 +217,23 @@ export const RefactoringEngine = ({ smell, originalCode, project }) => {
                   <TabsTrigger value="after">After</TabsTrigger>
                 </TabsList>
                 <TabsContent value="diff" className="m-0">
-                  <div className="overflow-x-auto text-sm">
-                    <ReactDiffViewer
-                      oldValue={originalCode}
-                      newValue={result.refactored_code}
-                      splitView={true}
-                      useDarkTheme={false}
-                      leftTitle="Original"
-                      rightTitle="Refactored"
-                    />
+                  <div className="grid md:grid-cols-2 gap-0 border-t">
+                    <div className="border-r">
+                      <div className="bg-red-50 px-4 py-2 border-b font-semibold text-sm text-red-900">
+                        Original
+                      </div>
+                      <pre className="bg-red-50/30 text-gray-900 p-4 overflow-x-auto text-xs h-96 overflow-y-auto">
+                        <code>{originalCode}</code>
+                      </pre>
+                    </div>
+                    <div>
+                      <div className="bg-green-50 px-4 py-2 border-b font-semibold text-sm text-green-900">
+                        Refactored
+                      </div>
+                      <pre className="bg-green-50/30 text-gray-900 p-4 overflow-x-auto text-xs h-96 overflow-y-auto">
+                        <code>{result.refactored_code}</code>
+                      </pre>
+                    </div>
                   </div>
                 </TabsContent>
                 <TabsContent value="before" className="m-0">
