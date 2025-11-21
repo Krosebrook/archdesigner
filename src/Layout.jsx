@@ -1,3 +1,4 @@
+import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Building2, BarChart3, Layers3, Zap, Bot } from "lucide-react";
@@ -20,6 +21,11 @@ const navigationItems = [
     title: "Dashboard",
     url: createPageUrl("Dashboard"),
     icon: Layers3,
+  },
+  {
+    title: "My Dashboard",
+    url: createPageUrl("CustomDashboard"),
+    icon: BarChart3,
   },
   {
     title: "Projects",

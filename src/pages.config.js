@@ -3,6 +3,7 @@ import Projects from './pages/Projects';
 import Analytics from './pages/Analytics';
 import ProjectDetail from './pages/ProjectDetail';
 import Agents from './pages/Agents';
+import CustomDashboard from './pages/CustomDashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -12,6 +13,7 @@ export const PAGES = {
     "Analytics": Analytics,
     "ProjectDetail": ProjectDetail,
     "Agents": Agents,
+    "CustomDashboard": CustomDashboard,
 }
 
 export const pagesConfig = {
