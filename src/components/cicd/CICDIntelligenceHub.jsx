@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Zap, TestTube, Rocket, Activity } from "lucide-react";
+import { Zap, TestTube, Rocket, Activity, Cloud, Code } from "lucide-react";
 import { AnimatedHero } from "../shared/AnimatedHero";
 import { PipelineAnalyzer } from "./PipelineAnalyzer";
 import { FlakyTestDetector } from "./FlakyTestDetector";
@@ -37,25 +37,41 @@ export default function CICDIntelligenceHub({ project, services }) {
       <AnimatedHero
         icon={Activity}
         title="CI/CD Intelligence Hub"
-        description="AI-powered analysis for pipeline optimization, test reliability, and deployment excellence"
+        description="AI-powered pipeline generation, cloud deployment, and automated security scanning"
         gradient="from-blue-900 via-indigo-900 to-purple-900"
       />
 
-      <Tabs defaultValue="pipeline">
-        <TabsList className="grid w-full grid-cols-3">
+      <Tabs defaultValue="generate">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="generate">
+            <Code className="w-4 h-4 mr-2" />
+            Generate
+          </TabsTrigger>
+          <TabsTrigger value="deploy">
+            <Cloud className="w-4 h-4 mr-2" />
+            Deploy
+          </TabsTrigger>
           <TabsTrigger value="pipeline">
             <Zap className="w-4 h-4 mr-2" />
-            Pipeline Analysis
+            Analyze
           </TabsTrigger>
           <TabsTrigger value="tests">
             <TestTube className="w-4 h-4 mr-2" />
-            Test Health
+            Tests
           </TabsTrigger>
           <TabsTrigger value="deployment">
             <Rocket className="w-4 h-4 mr-2" />
-            Deployment Strategy
+            Advisor
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="generate">
+          <SmartPipelineGenerator project={project} services={services} />
+        </TabsContent>
+
+        <TabsContent value="deploy">
+          <CloudDeploymentEngine project={project} services={services} />
+        </TabsContent>
 
         <TabsContent value="pipeline">
           <PipelineAnalyzer project={project} cicdConfig={cicdConfig} />

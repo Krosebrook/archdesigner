@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Github, GitBranch, CheckSquare, Cloud, Plug } from "lucide-react";
 import { AnimatedHero } from "../shared/AnimatedHero";
 import { GitHubConnector } from "./GitHubConnector";
+import { GitLabConnector } from "./GitLabConnector";
+import { BitbucketConnector } from "./BitbucketConnector";
 import { JiraConnector } from "./JiraConnector";
 import { CloudProviderConnector } from "./CloudProviderConnector";
 
@@ -32,7 +34,6 @@ export default function IntegrationHub({ project }) {
     loadConnections();
   };
 
-  const getConnection = (type) => connections.find(c => c.integration_type === type);
   const getCloudConnections = () => connections.filter(c => ["aws", "azure", "gcp"].includes(c.integration_type));
 
   return (
@@ -68,12 +69,12 @@ export default function IntegrationHub({ project }) {
           <TabsTrigger value="git">
             <Github className="w-4 h-4 mr-2" />
             Git Repos
-            {getConnection('github') && <Badge className="ml-2 bg-green-100 text-green-800">✓</Badge>}
+            <Badge className="ml-2 bg-green-100 text-green-800">{connections.filter(c => ['github', 'gitlab', 'bitbucket'].includes(c.integration_type)).length}</Badge>
           </TabsTrigger>
           <TabsTrigger value="issues">
             <CheckSquare className="w-4 h-4 mr-2" />
             Issue Tracking
-            {getConnection('jira') && <Badge className="ml-2 bg-green-100 text-green-800">✓</Badge>}
+            {connections.find(c => c.integration_type === 'jira') && <Badge className="ml-2 bg-green-100 text-green-800">✓</Badge>}
           </TabsTrigger>
           <TabsTrigger value="cloud">
             <Cloud className="w-4 h-4 mr-2" />
@@ -84,28 +85,15 @@ export default function IntegrationHub({ project }) {
 
         <TabsContent value="git">
           <div className="space-y-4">
-            <GitHubConnector 
-              project={project} 
-              connection={getConnection('github')} 
-              onUpdate={handleUpdate}
-            />
-            
-            <Card className="bg-gray-50 border-dashed">
-              <CardContent className="p-6 text-center text-gray-500">
-                <GitBranch className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                <p className="text-sm">GitLab and Bitbucket coming soon</p>
-              </CardContent>
-            </Card>
+            <GitHubConnector project={project} connections={connections} onUpdate={handleUpdate} />
+            <GitLabConnector project={project} connections={connections} onUpdate={handleUpdate} />
+            <BitbucketConnector project={project} connections={connections} onUpdate={handleUpdate} />
           </div>
         </TabsContent>
 
         <TabsContent value="issues">
           <div className="space-y-4">
-            <JiraConnector 
-              project={project} 
-              connection={getConnection('jira')} 
-              onUpdate={handleUpdate}
-            />
+            <JiraConnector project={project} connections={connections} onUpdate={handleUpdate} />
             
             <Card className="bg-gray-50 border-dashed">
               <CardContent className="p-6 text-center text-gray-500">
