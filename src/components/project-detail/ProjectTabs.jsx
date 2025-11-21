@@ -38,6 +38,7 @@ import KnowledgeBaseHub from "../knowledge-base/KnowledgeBaseHub";
 import CodeScaffoldingHub from "../code-scaffold/CodeScaffoldingHub";
 import CodeRefactoringHub from "../code-refactor/CodeRefactoringHub";
 import CICDIntelligenceHub from "../cicd/CICDIntelligenceHub";
+import DocumentationIntelligenceHub from "../documentation/DocumentationIntelligenceHub";
 
 export const tabConfig = [
   { id: "assistant", label: "AI Assistant", icon: Bot, component: AIProjectAssistant, props: ["project", "services"] },
@@ -55,6 +56,7 @@ export const tabConfig = [
   { id: "dependencies", label: "Graph", icon: Network, component: DependencyVisualizer, props: ["project", "services"] },
   { id: "refactor", label: "Refactor", icon: RefreshCw, component: CodeRefactoringHub, props: ["project", "services"] },
   { id: "documentation", label: "Docs", icon: FileText, component: AIDocGenerator, props: ["project", "services"] },
+  { id: "docs-intelligence", label: "Docs AI", icon: BookOpen, component: DocumentationIntelligenceHub, props: ["project", "services"] },
   { id: "code-review", label: "Review", icon: Code2, component: AICodeReview, props: ["project", "services"] },
   { id: "api-gen", label: "API", icon: FileCode2, component: APIGenerator, props: ["project", "services"] },
   { id: "cost", label: "Cost", icon: DollarSign, component: CostOptimizer, props: ["project", "services"] },
