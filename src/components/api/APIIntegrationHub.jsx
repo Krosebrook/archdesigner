@@ -8,10 +8,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Code, Activity, FileText, Loader2 } from "lucide-react";
+import { Plus, Code, Activity, FileText, Loader2, TrendingUp, AlertTriangle, Zap } from "lucide-react";
 import { AnimatedHero } from "../shared/AnimatedHero";
 import { APIExplorer } from "./APIExplorer";
 import { APIMonitor } from "./APIMonitor";
+import { PredictiveMonitor } from "./PredictiveMonitor";
+import { AnomalyDetector } from "./AnomalyDetector";
+import { OptimizationEngine } from "./OptimizationEngine";
+import { AnalyticsReport } from "./AnalyticsReport";
 import { invokeLLM } from "../shared/AILLMProvider";
 
 export default function APIIntegrationHub({ project, services }) {
@@ -20,10 +24,31 @@ export default function APIIntegrationHub({ project, services }) {
   const [showCreate, setShowCreate] = useState(false);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [logs, setLogs] = useState([]);
 
   useEffect(() => {
     loadIntegrations();
   }, [project.id]);
+
+  useEffect(() => {
+    if (selectedIntegration) {
+      loadLogs();
+    }
+  }, [selectedIntegration?.id]);
+
+  const loadLogs = async () => {
+    if (!selectedIntegration) return;
+    try {
+      const data = await base44.entities.APILog.filter(
+        { integration_id: selectedIntegration.id },
+        '-created_date',
+        200
+      );
+      setLogs(data);
+    } catch (error) {
+      console.error("Error loading logs:", error);
+    }
+  };
 
   const loadIntegrations = async () => {
     setLoading(true);
@@ -133,14 +158,30 @@ Return as structured JSON.`,
 
       {selectedIntegration ? (
         <Tabs defaultValue="explorer">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="explorer">
               <Code className="w-4 h-4 mr-2" />
-              Explorer
+              Test
             </TabsTrigger>
             <TabsTrigger value="monitor">
               <Activity className="w-4 h-4 mr-2" />
               Monitor
+            </TabsTrigger>
+            <TabsTrigger value="predictive">
+              <TrendingUp className="w-4 h-4 mr-2" />
+              Predict
+            </TabsTrigger>
+            <TabsTrigger value="anomaly">
+              <AlertTriangle className="w-4 h-4 mr-2" />
+              Anomaly
+            </TabsTrigger>
+            <TabsTrigger value="optimize">
+              <Zap className="w-4 h-4 mr-2" />
+              Optimize
+            </TabsTrigger>
+            <TabsTrigger value="report">
+              <FileText className="w-4 h-4 mr-2" />
+              Report
             </TabsTrigger>
             <TabsTrigger value="docs">
               <FileText className="w-4 h-4 mr-2" />
@@ -149,11 +190,27 @@ Return as structured JSON.`,
           </TabsList>
 
           <TabsContent value="explorer">
-            <APIExplorer integration={selectedIntegration} onTest={loadIntegrations} />
+            <APIExplorer integration={selectedIntegration} onTest={() => { loadIntegrations(); loadLogs(); }} />
           </TabsContent>
 
           <TabsContent value="monitor">
             <APIMonitor integration={selectedIntegration} />
+          </TabsContent>
+
+          <TabsContent value="predictive">
+            <PredictiveMonitor integration={selectedIntegration} logs={logs} />
+          </TabsContent>
+
+          <TabsContent value="anomaly">
+            <AnomalyDetector integration={selectedIntegration} logs={logs} />
+          </TabsContent>
+
+          <TabsContent value="optimize">
+            <OptimizationEngine integration={selectedIntegration} logs={logs} />
+          </TabsContent>
+
+          <TabsContent value="report">
+            <AnalyticsReport integration={selectedIntegration} logs={logs} />
           </TabsContent>
 
           <TabsContent value="docs">
