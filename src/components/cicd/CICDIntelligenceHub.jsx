@@ -6,6 +6,8 @@ import { AnimatedHero } from "../shared/AnimatedHero";
 import { PipelineAnalyzer } from "./PipelineAnalyzer";
 import { FlakyTestDetector } from "./FlakyTestDetector";
 import { DeploymentAdvisor } from "./DeploymentAdvisor";
+import { SmartPipelineGenerator } from "./SmartPipelineGenerator";
+import { CloudDeploymentEngine } from "./CloudDeploymentEngine";
 
 export default function CICDIntelligenceHub({ project, services }) {
   const [cicdConfig, setCicdConfig] = useState(null);
