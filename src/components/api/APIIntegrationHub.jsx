@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Code, Activity, FileText, Loader2, TrendingUp, AlertTriangle, Zap } from "lucide-react";
+import { Plus, Code, Activity, FileText, Loader2, TrendingUp, AlertTriangle, Zap, Sparkles, CreditCard, Mail, Cloud, Database, MessageSquare, MapPin, Shield, BarChart3, Bell, Users } from "lucide-react";
 import { AnimatedHero } from "../shared/AnimatedHero";
 import { APIExplorer } from "./APIExplorer";
 import { APIMonitor } from "./APIMonitor";
@@ -18,12 +18,118 @@ import { OptimizationEngine } from "./OptimizationEngine";
 import { AnalyticsReport } from "./AnalyticsReport";
 import { invokeLLM } from "../shared/AILLMProvider";
 
+const TOP_APIS = [
+  { 
+    id: 'stripe', name: 'Stripe', icon: CreditCard, color: 'purple',
+    base_url: 'https://api.stripe.com/v1', auth_type: 'bearer',
+    endpoints: [
+      { method: 'POST', path: '/customers', description: 'Create a customer' },
+      { method: 'POST', path: '/payment_intents', description: 'Create payment intent' },
+      { method: 'GET', path: '/charges', description: 'List all charges' },
+      { method: 'POST', path: '/subscriptions', description: 'Create subscription' },
+      { method: 'POST', path: '/refunds', description: 'Create refund' }
+    ]
+  },
+  { 
+    id: 'sendgrid', name: 'SendGrid', icon: Mail, color: 'blue',
+    base_url: 'https://api.sendgrid.com/v3', auth_type: 'bearer',
+    endpoints: [
+      { method: 'POST', path: '/mail/send', description: 'Send email' },
+      { method: 'GET', path: '/templates', description: 'List templates' },
+      { method: 'GET', path: '/stats', description: 'Get email statistics' },
+      { method: 'POST', path: '/contactdb/recipients', description: 'Add contacts' }
+    ]
+  },
+  { 
+    id: 'twilio', name: 'Twilio', icon: MessageSquare, color: 'red',
+    base_url: 'https://api.twilio.com/2010-04-01', auth_type: 'basic',
+    endpoints: [
+      { method: 'POST', path: '/Messages', description: 'Send SMS' },
+      { method: 'POST', path: '/Calls', description: 'Make voice call' },
+      { method: 'GET', path: '/Messages', description: 'List messages' },
+      { method: 'POST', path: '/Verify/Services', description: 'Create verification' }
+    ]
+  },
+  { 
+    id: 'aws-s3', name: 'AWS S3', icon: Cloud, color: 'orange',
+    base_url: 'https://s3.amazonaws.com', auth_type: 'api_key',
+    endpoints: [
+      { method: 'PUT', path: '/{bucket}/{key}', description: 'Upload object' },
+      { method: 'GET', path: '/{bucket}/{key}', description: 'Get object' },
+      { method: 'DELETE', path: '/{bucket}/{key}', description: 'Delete object' },
+      { method: 'GET', path: '/{bucket}', description: 'List bucket contents' }
+    ]
+  },
+  { 
+    id: 'firebase', name: 'Firebase', icon: Database, color: 'yellow',
+    base_url: 'https://firestore.googleapis.com/v1', auth_type: 'bearer',
+    endpoints: [
+      { method: 'POST', path: '/documents', description: 'Create document' },
+      { method: 'GET', path: '/documents/{docId}', description: 'Get document' },
+      { method: 'PATCH', path: '/documents/{docId}', description: 'Update document' },
+      { method: 'DELETE', path: '/documents/{docId}', description: 'Delete document' }
+    ]
+  },
+  { 
+    id: 'google-maps', name: 'Google Maps', icon: MapPin, color: 'green',
+    base_url: 'https://maps.googleapis.com/maps/api', auth_type: 'api_key',
+    endpoints: [
+      { method: 'GET', path: '/geocode/json', description: 'Geocode address' },
+      { method: 'GET', path: '/directions/json', description: 'Get directions' },
+      { method: 'GET', path: '/place/details/json', description: 'Place details' },
+      { method: 'GET', path: '/distancematrix/json', description: 'Distance matrix' }
+    ]
+  },
+  { 
+    id: 'auth0', name: 'Auth0', icon: Shield, color: 'indigo',
+    base_url: 'https://{tenant}.auth0.com/api/v2', auth_type: 'bearer',
+    endpoints: [
+      { method: 'POST', path: '/users', description: 'Create user' },
+      { method: 'GET', path: '/users/{id}', description: 'Get user' },
+      { method: 'PATCH', path: '/users/{id}', description: 'Update user' },
+      { method: 'POST', path: '/oauth/token', description: 'Get access token' }
+    ]
+  },
+  { 
+    id: 'mixpanel', name: 'Mixpanel', icon: BarChart3, color: 'pink',
+    base_url: 'https://api.mixpanel.com', auth_type: 'basic',
+    endpoints: [
+      { method: 'POST', path: '/track', description: 'Track event' },
+      { method: 'POST', path: '/engage', description: 'Update user profile' },
+      { method: 'GET', path: '/events', description: 'Query events' },
+      { method: 'GET', path: '/funnels', description: 'Get funnel data' }
+    ]
+  },
+  { 
+    id: 'slack', name: 'Slack', icon: Bell, color: 'emerald',
+    base_url: 'https://slack.com/api', auth_type: 'bearer',
+    endpoints: [
+      { method: 'POST', path: '/chat.postMessage', description: 'Send message' },
+      { method: 'GET', path: '/conversations.list', description: 'List channels' },
+      { method: 'POST', path: '/files.upload', description: 'Upload file' },
+      { method: 'GET', path: '/users.list', description: 'List users' }
+    ]
+  },
+  { 
+    id: 'github', name: 'GitHub', icon: Users, color: 'gray',
+    base_url: 'https://api.github.com', auth_type: 'bearer',
+    endpoints: [
+      { method: 'GET', path: '/repos/{owner}/{repo}', description: 'Get repository' },
+      { method: 'POST', path: '/repos/{owner}/{repo}/issues', description: 'Create issue' },
+      { method: 'GET', path: '/repos/{owner}/{repo}/pulls', description: 'List PRs' },
+      { method: 'POST', path: '/repos/{owner}/{repo}/commits', description: 'Create commit' }
+    ]
+  }
+];
+
 export default function APIIntegrationHub({ project, services }) {
   const [integrations, setIntegrations] = useState([]);
   const [selectedIntegration, setSelectedIntegration] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [showTopAPIs, setShowTopAPIs] = useState(false);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [addingAPI, setAddingAPI] = useState(null);
   const [logs, setLogs] = useState([]);
 
   useEffect(() => {
@@ -125,6 +231,31 @@ Return as structured JSON.`,
     setGenerating(false);
   };
 
+  const addTopAPI = async (api) => {
+    setAddingAPI(api.id);
+    try {
+      const integration = await base44.entities.APIIntegration.create({
+        project_id: project.id,
+        name: api.name,
+        base_url: api.base_url,
+        auth_type: api.auth_type,
+        endpoints: api.endpoints,
+        status: "active",
+        metrics: { total_requests: 0, success_rate: 100, avg_response_time: 0 }
+      });
+      setIntegrations([...integrations, integration]);
+      setSelectedIntegration(integration);
+      setShowTopAPIs(false);
+    } catch (error) {
+      console.error("Error adding API:", error);
+    }
+    setAddingAPI(null);
+  };
+
+  const enabledAPIIds = integrations.map(i => 
+    TOP_APIS.find(a => i.name === a.name)?.id
+  ).filter(Boolean);
+
   return (
     <div className="space-y-6">
       <AnimatedHero
@@ -134,8 +265,8 @@ Return as structured JSON.`,
         gradient="from-cyan-900 via-blue-900 to-indigo-900"
       />
 
-      <div className="flex items-center justify-between">
-        <div className="flex gap-2">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex gap-2 flex-wrap">
           {integrations.map(int => (
             <Button
               key={int.id}
@@ -150,10 +281,20 @@ Return as structured JSON.`,
             </Button>
           ))}
         </div>
-        <Button onClick={() => setShowCreate(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Add API
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={() => setShowTopAPIs(true)} 
+            variant="outline"
+            className="bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200 hover:border-purple-400"
+          >
+            <Sparkles className="w-4 h-4 mr-2 text-purple-600" />
+            Top 10 APIs
+          </Button>
+          <Button onClick={() => setShowCreate(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Custom API
+          </Button>
+        </div>
       </div>
 
       {selectedIntegration ? (
@@ -283,6 +424,83 @@ Return as structured JSON.`,
                 </Button>
               ))}
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showTopAPIs} onOpenChange={setShowTopAPIs}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-purple-600" />
+              Top 10 Essential APIs
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-gray-600 mb-4">
+            Instantly add pre-configured integrations for the most popular APIs
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {TOP_APIS.map(api => {
+              const Icon = api.icon;
+              const isEnabled = enabledAPIIds.includes(api.id);
+              const isAdding = addingAPI === api.id;
+              
+              return (
+                <Card 
+                  key={api.id} 
+                  className={`transition-all duration-300 ${
+                    isEnabled 
+                      ? 'bg-green-50 border-green-300' 
+                      : 'hover:shadow-lg hover:border-purple-300 cursor-pointer'
+                  }`}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-lg bg-${api.color}-100 flex items-center justify-center`}>
+                          <Icon className={`w-5 h-5 text-${api.color}-600`} />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-gray-900">{api.name}</h4>
+                          <p className="text-xs text-gray-500">{api.endpoints.length} endpoints</p>
+                        </div>
+                      </div>
+                      {isEnabled ? (
+                        <Badge className="bg-green-600">Enabled</Badge>
+                      ) : (
+                        <Button 
+                          size="sm" 
+                          onClick={() => addTopAPI(api)}
+                          disabled={isAdding}
+                          className="bg-gradient-to-r from-purple-600 to-blue-600"
+                        >
+                          {isAdding ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <>
+                              <Plus className="w-4 h-4 mr-1" />
+                              Add
+                            </>
+                          )}
+                        </Button>
+                      )}
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-1">
+                      {api.endpoints.slice(0, 3).map((ep, i) => (
+                        <Badge key={i} variant="outline" className="text-xs">
+                          {ep.method}
+                        </Badge>
+                      ))}
+                      {api.endpoints.length > 3 && (
+                        <Badge variant="outline" className="text-xs">
+                          +{api.endpoints.length - 3}
+                        </Badge>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </DialogContent>
       </Dialog>
