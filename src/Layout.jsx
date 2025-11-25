@@ -2,6 +2,7 @@ import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Building2, BarChart3, Layers3, Zap, Bot } from "lucide-react";
+import PWAInstaller from "./components/shared/PWAInstaller";
 import {
   Sidebar,
   SidebarContent,
@@ -45,9 +46,39 @@ const navigationItems = [
 ];
 
 export default function Layout({ children }) {
-  const location = useLocation();
+    const location = useLocation();
 
-  return (
+    // Register PWA meta tags dynamically
+    React.useEffect(() => {
+      // Theme color for mobile browsers
+      let themeColor = document.querySelector('meta[name="theme-color"]');
+      if (!themeColor) {
+        themeColor = document.createElement('meta');
+        themeColor.name = 'theme-color';
+        document.head.appendChild(themeColor);
+      }
+      themeColor.content = '#1e1b4b';
+
+      // Apple mobile web app capable
+      let appleMeta = document.querySelector('meta[name="apple-mobile-web-app-capable"]');
+      if (!appleMeta) {
+        appleMeta = document.createElement('meta');
+        appleMeta.name = 'apple-mobile-web-app-capable';
+        appleMeta.content = 'yes';
+        document.head.appendChild(appleMeta);
+      }
+
+      // Apple status bar style
+      let appleStatus = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+      if (!appleStatus) {
+        appleStatus = document.createElement('meta');
+        appleStatus.name = 'apple-mobile-web-app-status-bar-style';
+        appleStatus.content = 'black-translucent';
+        document.head.appendChild(appleStatus);
+      }
+    }, []);
+
+    return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <style jsx>{`
@@ -112,8 +143,11 @@ export default function Layout({ children }) {
           <div className="flex-1 overflow-auto">
             {children}
           </div>
-        </main>
-      </div>
-    </SidebarProvider>
-  );
-}
+          </main>
+
+          {/* PWA Install Prompt */}
+          <PWAInstaller />
+          </div>
+          </SidebarProvider>
+          );
+          }
