@@ -1,25 +1,60 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { 
+  generateCorrelationId, 
+  createLogger, 
+  ErrorCodes, 
+  createErrorResponse, 
+  createSuccessResponse,
+  validateRequired,
+  getCached,
+  setCache
+} from './lib/utils.js';
 
 /**
  * Project Health Check
- * Comprehensive health analysis across all project aspects
+ * AXIS: Performance (caching), Architecture, Observability
+ * 
+ * Features:
+ * - Response caching (60s TTL)
+ * - Parallel data fetching
+ * - Structured metrics
+ * - Health score calculation with weighted factors
  */
 Deno.serve(async (req) => {
+  const correlationId = generateCorrelationId();
+  const logger = createLogger(correlationId, 'projectHealthCheck');
+  const startTime = Date.now();
+
   try {
+    logger.info('Health check initiated');
+    
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
 
     if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(ErrorCodes.UNAUTHORIZED, 'Authentication required', correlationId);
     }
 
-    const { project_id } = await req.json();
-
-    if (!project_id) {
-      return Response.json({ error: 'project_id is required' }, { status: 400 });
+    const body = await req.json();
+    const validation = validateRequired(body, ['project_id']);
+    
+    if (!validation.valid) {
+      return createErrorResponse(ErrorCodes.VALIDATION, `Missing: ${validation.missing.join(', ')}`, correlationId);
     }
 
-    // Fetch all project data in parallel
+    const { project_id } = body;
+
+    // PERFORMANCE: Check cache first
+    const cacheKey = `health_${project_id}`;
+    const cached = getCached(cacheKey);
+    if (cached) {
+      logger.info('Cache hit', { project_id });
+      return createSuccessResponse(cached, correlationId, { cached: true });
+    }
+
+    logger.info('Cache miss, computing health', { project_id });
+
+    // PERFORMANCE: Parallel data fetching (6 concurrent queries)
     const [
       projects,
       services,
@@ -128,12 +163,19 @@ Deno.serve(async (req) => {
       });
     }
 
-    return Response.json({
-      success: true,
-      health: healthReport
+    // PERFORMANCE: Cache the result
+    setCache(cacheKey, healthReport, 60000);
+
+    logger.metric('health_check_complete', Date.now() - startTime, {
+      project_id,
+      overall_score: healthReport.overall_score,
+      status: healthReport.status
     });
 
+    return createSuccessResponse(healthReport, correlationId);
+
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    logger.error('Health check failed', error);
+    return createErrorResponse(ErrorCodes.INTERNAL, error.message, correlationId);
   }
 });

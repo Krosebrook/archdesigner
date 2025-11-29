@@ -1,23 +1,48 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { 
+  generateCorrelationId, 
+  createLogger, 
+  ErrorCodes, 
+  createErrorResponse, 
+  createSuccessResponse,
+  executeCoTReasoning,
+  validateRequired 
+} from './lib/utils.js';
 
 /**
  * AI Code Generator
- * Generates boilerplate and scaffold code for services
+ * AXIS: Architecture, CoT Reasoning, Performance
+ * 
+ * Features:
+ * - Structured CoT code generation
+ * - Multi-language support
+ * - Clean architecture patterns
+ * - Automatic dependency tracking
  */
 Deno.serve(async (req) => {
+  const correlationId = generateCorrelationId();
+  const logger = createLogger(correlationId, 'generateCode');
+  const startTime = Date.now();
+
   try {
+    logger.info('Code generation requested');
+    
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
 
     if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(ErrorCodes.UNAUTHORIZED, 'Authentication required', correlationId);
     }
 
-    const { service_id, code_type = 'scaffold', language = 'typescript' } = await req.json();
-
-    if (!service_id) {
-      return Response.json({ error: 'service_id is required' }, { status: 400 });
+    const body = await req.json();
+    const validation = validateRequired(body, ['service_id']);
+    
+    if (!validation.valid) {
+      return createErrorResponse(ErrorCodes.VALIDATION, `Missing: ${validation.missing.join(', ')}`, correlationId);
     }
+
+    const { service_id, code_type = 'scaffold', language = 'typescript' } = body;
+    logger.info('Generating code', { service_id, code_type, language });
 
     const services = await base44.entities.Service.filter({ id: service_id });
     const service = services[0];
@@ -96,12 +121,24 @@ Generate production-ready code with:
       dependencies: generatedCode.dependencies
     });
 
-    return Response.json({
-      success: true,
-      code: generatedCode
+    logger.metric('code_generation_complete', Date.now() - startTime, {
+      service_id,
+      code_type,
+      language,
+      files_count: generatedCode.files?.length || 0
     });
 
+    return createSuccessResponse({
+      code: generatedCode,
+      generation_metadata: {
+        code_type,
+        language,
+        generated_at: new Date().toISOString()
+      }
+    }, correlationId);
+
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    logger.error('Code generation failed', error);
+    return createErrorResponse(ErrorCodes.INTERNAL, error.message, correlationId);
   }
 });

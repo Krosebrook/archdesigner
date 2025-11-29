@@ -1,23 +1,49 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { 
+  generateCorrelationId, 
+  createLogger, 
+  ErrorCodes, 
+  createErrorResponse, 
+  createSuccessResponse,
+  executeCoTReasoning,
+  validateRequired 
+} from './lib/utils.js';
 
 /**
  * Security Vulnerability Scanner
- * Scans project architecture for security vulnerabilities
+ * AXIS: Security, CoT Reasoning, Observability
+ * 
+ * Features:
+ * - Structured CoT security analysis
+ * - OWASP-aligned vulnerability detection
+ * - Severity classification
+ * - Automated finding persistence
  */
 Deno.serve(async (req) => {
+  const correlationId = generateCorrelationId();
+  const logger = createLogger(correlationId, 'securityScan');
+  const startTime = Date.now();
+
   try {
+    logger.info('Security scan initiated');
+    
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
 
     if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+      logger.warn('Unauthorized scan attempt');
+      return createErrorResponse(ErrorCodes.UNAUTHORIZED, 'Authentication required', correlationId);
     }
 
-    const { project_id, scan_type = 'full' } = await req.json();
-
-    if (!project_id) {
-      return Response.json({ error: 'project_id is required' }, { status: 400 });
+    const body = await req.json();
+    const validation = validateRequired(body, ['project_id']);
+    
+    if (!validation.valid) {
+      return createErrorResponse(ErrorCodes.VALIDATION, `Missing: ${validation.missing.join(', ')}`, correlationId);
     }
+
+    const { project_id, scan_type = 'full' } = body;
+    logger.info('Starting scan', { project_id, scan_type, user: user.email });
 
     const [projects, services, cicd, apis] = await Promise.all([
       base44.entities.Project.filter({ id: project_id }),
@@ -115,12 +141,24 @@ Analyze for:
       await base44.entities.SecurityFinding.bulkCreate(findingsToSave);
     }
 
-    return Response.json({
-      success: true,
-      scan_result: scanResult
+    logger.metric('security_scan_complete', Date.now() - startTime, {
+      project_id,
+      findings_count: scanResult.findings?.length || 0,
+      critical_count: scanResult.summary?.critical || 0,
+      risk_level: scanResult.risk_level
     });
 
+    return createSuccessResponse({
+      scan_result: scanResult,
+      scan_metadata: {
+        scan_type,
+        scanned_at: new Date().toISOString(),
+        findings_saved: findingsToSave.length
+      }
+    }, correlationId);
+
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    logger.error('Security scan failed', error);
+    return createErrorResponse(ErrorCodes.INTERNAL, error.message, correlationId);
   }
 });
