@@ -1,22 +1,77 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { 
+  generateCorrelationId, 
+  createLogger, 
+  ErrorCodes, 
+  createErrorResponse, 
+  createSuccessResponse,
+  validateRequired,
+  validateEnum,
+  validateSchema,
+  sanitiseString,
+  sanitiseLLMInput,
+  filterSensitiveForLLM,
+  enforceOwnership,
+  auditLog
+} from './lib/utils.js';
 
 /**
  * CI/CD Pipeline Generator
- * Generates complete CI/CD configurations for various platforms
+ * AXIS: Security (Schema validation, RBAC, PII filtering)
+ * 
+ * Security Features:
+ * - Schema-based input validation
+ * - Platform enum validation
+ * - Ownership enforcement
+ * - Sensitive data filtering for LLM
+ * - Audit logging for compliance
  */
+
+const ALLOWED_PLATFORMS = ['github_actions', 'gitlab_ci', 'jenkins', 'circleci', 'azure_devops', 'bitbucket'];
+
+const OPTIONS_SCHEMA = {
+  include_tests: { type: 'boolean' },
+  security_scan: { type: 'boolean' },
+  docker: { type: 'boolean' },
+  auto_deploy_staging: { type: 'boolean' },
+  manual_production: { type: 'boolean' }
+};
+
 Deno.serve(async (req) => {
+  const correlationId = generateCorrelationId();
+  const logger = createLogger(correlationId, 'generateCICD');
+  const startTime = Date.now();
+
   try {
+    logger.info('CI/CD generation requested');
+    
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
 
     if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(ErrorCodes.UNAUTHORIZED, 'Authentication required', correlationId);
     }
 
-    const { project_id, platform = 'github_actions', options = {} } = await req.json();
+    const body = await req.json();
+    
+    // PHASE 2.1: Input Validation
+    const validation = validateRequired(body, ['project_id']);
+    if (!validation.valid) {
+      return createErrorResponse(ErrorCodes.VALIDATION, `Missing: ${validation.missing.join(', ')}`, correlationId);
+    }
 
-    if (!project_id) {
-      return Response.json({ error: 'project_id is required' }, { status: 400 });
+    const { project_id, platform = 'github_actions', options = {} } = body;
+    
+    // Validate platform enum
+    const platformValidation = validateEnum(platform, ALLOWED_PLATFORMS, 'platform');
+    if (!platformValidation.valid) {
+      return createErrorResponse(ErrorCodes.VALIDATION, platformValidation.error, correlationId);
+    }
+
+    // Validate options schema
+    const optionsValidation = validateSchema(options, OPTIONS_SCHEMA);
+    if (!optionsValidation.valid) {
+      return createErrorResponse(ErrorCodes.VALIDATION, optionsValidation.errors.join('; '), correlationId);
     }
 
     const [projects, services] = await Promise.all([
@@ -26,18 +81,30 @@ Deno.serve(async (req) => {
 
     const project = projects[0];
     if (!project) {
-      return Response.json({ error: 'Project not found' }, { status: 404 });
+      return createErrorResponse(ErrorCodes.NOT_FOUND, 'Project not found', correlationId);
     }
 
-    const cicdConfig = await base44.integrations.Core.InvokeLLM({
-      prompt: `Generate a production-ready CI/CD pipeline configuration.
+    // PHASE 2.2: RBAC - Ownership check
+    const ownershipError = enforceOwnership(user, project, correlationId, logger);
+    if (ownershipError) return ownershipError;
+
+    // PHASE 2.3: Audit log for sensitive operation
+    auditLog(logger, 'GENERATE_CICD', user, { project_id, platform });
+
+    // PHASE 2.3: Filter sensitive data before LLM
+    const safeServices = filterSensitiveForLLM(
+      services.map(s => ({
+        name: sanitiseString(s.name, 100),
+        technologies: s.technologies
+      }))
+    );
+
+    // PHASE 2.1: Sanitise LLM prompt
+    const prompt = sanitiseLLMInput(`Generate a production-ready CI/CD pipeline configuration.
 
 Platform: ${platform}
-Project: ${project.name}
-Services: ${JSON.stringify(services.map(s => ({
-  name: s.name,
-  technologies: s.technologies
-})), null, 2)}
+Project: ${sanitiseString(project.name, 200)}
+Services: ${JSON.stringify(safeServices, null, 2)}
 
 Options:
 - Include tests: ${options.include_tests !== false}
@@ -54,7 +121,10 @@ Generate complete pipeline configuration including:
 5. Docker image build and push
 6. Deployment stages (staging/production)
 7. Rollback procedures
-8. Notifications`,
+8. Notifications`);
+
+    const cicdConfig = await base44.integrations.Core.InvokeLLM({
+      prompt,
       response_json_schema: {
         type: "object",
         properties: {
@@ -85,7 +155,6 @@ Generate complete pipeline configuration including:
       }
     });
 
-    // Save CI/CD configuration
     await base44.entities.CICDConfiguration.create({
       project_id,
       platform,
@@ -103,12 +172,12 @@ Generate complete pipeline configuration including:
       }
     });
 
-    return Response.json({
-      success: true,
-      config: cicdConfig
-    });
+    logger.metric('cicd_generated', Date.now() - startTime, { project_id, platform });
+
+    return createSuccessResponse({ config: cicdConfig }, correlationId);
 
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    logger.error('CI/CD generation failed', error);
+    return createErrorResponse(ErrorCodes.INTERNAL, 'CI/CD generation failed', correlationId);
   }
 });

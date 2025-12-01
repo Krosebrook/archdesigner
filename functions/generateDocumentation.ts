@@ -1,22 +1,62 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { 
+  generateCorrelationId, 
+  createLogger, 
+  ErrorCodes, 
+  createErrorResponse, 
+  createSuccessResponse,
+  validateRequired,
+  validateEnum,
+  sanitiseString,
+  sanitiseLLMInput,
+  filterSensitiveForLLM,
+  enforceOwnership,
+  auditLog
+} from './lib/utils.js';
 
 /**
  * AI Documentation Generator
- * Generates comprehensive documentation for projects and services
+ * AXIS: Security (Input validation, PII filtering, RBAC)
+ * 
+ * Security Features:
+ * - Input sanitisation
+ * - Enum validation for doc_type
+ * - PII filtering before LLM calls
+ * - Ownership enforcement
+ * - Audit logging
  */
+
+const ALLOWED_DOC_TYPES = ['full', 'readme', 'api', 'architecture'];
+
 Deno.serve(async (req) => {
+  const correlationId = generateCorrelationId();
+  const logger = createLogger(correlationId, 'generateDocumentation');
+  const startTime = Date.now();
+
   try {
+    logger.info('Documentation generation requested');
+    
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
 
     if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(ErrorCodes.UNAUTHORIZED, 'Authentication required', correlationId);
     }
 
-    const { project_id, doc_type = 'full' } = await req.json();
+    const body = await req.json();
+    
+    // PHASE 2.1: Input Validation
+    const validation = validateRequired(body, ['project_id']);
+    if (!validation.valid) {
+      return createErrorResponse(ErrorCodes.VALIDATION, `Missing: ${validation.missing.join(', ')}`, correlationId);
+    }
 
-    if (!project_id) {
-      return Response.json({ error: 'project_id is required' }, { status: 400 });
+    const { project_id, doc_type = 'full' } = body;
+    
+    // Validate enum
+    const enumValidation = validateEnum(doc_type, ALLOWED_DOC_TYPES, 'doc_type');
+    if (!enumValidation.valid) {
+      return createErrorResponse(ErrorCodes.VALIDATION, enumValidation.error, correlationId);
     }
 
     const [projects, services, cicd, apis] = await Promise.all([
@@ -28,8 +68,15 @@ Deno.serve(async (req) => {
 
     const project = projects[0];
     if (!project) {
-      return Response.json({ error: 'Project not found' }, { status: 404 });
+      return createErrorResponse(ErrorCodes.NOT_FOUND, 'Project not found', correlationId);
     }
+
+    // PHASE 2.2: RBAC - Ownership check
+    const ownershipError = enforceOwnership(user, project, correlationId, logger);
+    if (ownershipError) return ownershipError;
+
+    // PHASE 2.3: Audit log
+    auditLog(logger, 'GENERATE_DOCUMENTATION', user, { project_id, doc_type });
 
     const docPrompts = {
       full: `Generate comprehensive project documentation including overview, architecture, setup, and deployment.`,
@@ -38,23 +85,50 @@ Deno.serve(async (req) => {
       architecture: `Generate detailed architecture documentation with diagrams (mermaid syntax).`
     };
 
-    const documentation = await base44.integrations.Core.InvokeLLM({
-      prompt: `${docPrompts[doc_type] || docPrompts.full}
+    // PHASE 2.1 & 2.3: Sanitise inputs and filter sensitive data before LLM
+    const safeProject = filterSensitiveForLLM({
+      name: sanitiseString(project.name, 200),
+      description: sanitiseString(project.description, 2000),
+      category: project.category,
+      architecture_pattern: project.architecture_pattern || 'microservices'
+    });
 
-Project: ${project.name}
-Description: ${project.description}
-Category: ${project.category}
-Architecture: ${project.architecture_pattern || 'microservices'}
+    const safeServices = filterSensitiveForLLM(
+      services.map(s => ({
+        name: sanitiseString(s.name, 100),
+        description: sanitiseString(s.description, 500),
+        technologies: s.technologies
+      }))
+    );
+
+    const safeApis = filterSensitiveForLLM(
+      apis.map(a => ({
+        name: sanitiseString(a.name, 100),
+        base_url: a.base_url,
+        endpoints_count: a.endpoints?.length || 0
+      }))
+    );
+
+    // PHASE 2.1: Sanitise LLM prompt
+    const prompt = sanitiseLLMInput(`${docPrompts[doc_type]}
+
+Project: ${safeProject.name}
+Description: ${safeProject.description}
+Category: ${safeProject.category}
+Architecture: ${safeProject.architecture_pattern}
 
 Services:
-${services.map(s => `- ${s.name}: ${s.description} (${s.technologies?.join(', ')})`).join('\n')}
+${safeServices.map(s => `- ${s.name}: ${s.description} (${s.technologies?.join(', ')})`).join('\n')}
 
 CI/CD: ${cicd.length > 0 ? cicd[0].platform : 'Not configured'}
 
 APIs:
-${apis.map(a => `- ${a.name}: ${a.base_url} (${a.endpoints?.length || 0} endpoints)`).join('\n')}
+${safeApis.map(a => `- ${a.name}: ${a.base_url} (${a.endpoints_count} endpoints)`).join('\n')}
 
-Generate professional documentation in Markdown format.`,
+Generate professional documentation in Markdown format.`);
+
+    const documentation = await base44.integrations.Core.InvokeLLM({
+      prompt,
       response_json_schema: {
         type: "object",
         properties: {
@@ -85,7 +159,6 @@ Generate professional documentation in Markdown format.`,
       }
     });
 
-    // Save documentation
     await base44.entities.Documentation.create({
       project_id,
       doc_type,
@@ -94,12 +167,12 @@ Generate professional documentation in Markdown format.`,
       version: "1.0.0"
     });
 
-    return Response.json({
-      success: true,
-      documentation
-    });
+    logger.metric('documentation_generated', Date.now() - startTime, { project_id, doc_type });
+
+    return createSuccessResponse({ documentation }, correlationId);
 
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    logger.error('Documentation generation failed', error);
+    return createErrorResponse(ErrorCodes.INTERNAL, 'Documentation generation failed', correlationId);
   }
 });
