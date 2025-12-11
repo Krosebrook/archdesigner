@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart3, TrendingUp, Shield, Code, Activity, Download } from "lucide-react";
 import { AnimatedHero } from "../shared/AnimatedHero";
-import { ErrorBoundary } from "../shared/ErrorBoundary";
+import ErrorBoundary from "../shared/ErrorBoundary";
 import { MetricsOverview } from "./MetricsOverview";
 import { TrendForecasting } from "./TrendForecasting";
 import { SecurityPosture } from "./SecurityPosture";
