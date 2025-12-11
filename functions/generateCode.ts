@@ -5,19 +5,23 @@ import {
   ErrorCodes, 
   createErrorResponse, 
   createSuccessResponse,
-  executeCoTReasoning,
-  validateRequired 
+  executeAdvancedCoTReasoning,
+  validateRequired,
+  sanitiseString,
+  filterSensitiveForLLM,
+  enforceOwnership
 } from './lib/utils.js';
 
 /**
- * AI Code Generator
- * AXIS: Architecture, CoT Reasoning, Performance
+ * AI Code Generator — Production Grade
+ * AXIS: Architecture, CoT Reasoning, Security
  * 
  * Features:
- * - Structured CoT code generation
- * - Multi-language support
- * - Clean architecture patterns
- * - Automatic dependency tracking
+ * - Complete microservice scaffolding with API structures
+ * - Dockerfiles and docker-compose configs
+ * - Unit and integration tests
+ * - Project context-aware generation
+ * - Advanced CoT reasoning with validation
  */
 Deno.serve(async (req) => {
   const correlationId = generateCorrelationId();
@@ -41,73 +45,131 @@ Deno.serve(async (req) => {
       return createErrorResponse(ErrorCodes.VALIDATION, `Missing: ${validation.missing.join(', ')}`, correlationId);
     }
 
-    const { service_id, code_type = 'scaffold', language = 'typescript' } = body;
-    logger.info('Generating code', { service_id, code_type, language });
+    const { 
+      service_id, 
+      language = 'typescript',
+      framework = 'express',
+      include_tests = true,
+      include_docker = true,
+      include_api = true,
+      architecture_pattern = 'microservices'
+    } = body;
+    
+    logger.info('Generating code', { service_id, language, framework });
 
-    const services = await base44.entities.Service.filter({ id: service_id });
+    // Fetch service and project data
+    const [services, projects] = await Promise.all([
+      base44.entities.Service.filter({ id: service_id }),
+      base44.entities.Project.list()
+    ]);
+
     const service = services[0];
-
     if (!service) {
-      return Response.json({ error: 'Service not found' }, { status: 404 });
+      return createErrorResponse(ErrorCodes.NOT_FOUND, 'Service not found', correlationId);
     }
 
-    const codeTypes = {
-      scaffold: 'Complete service scaffold with project structure, configs, and base files',
-      api: 'REST API implementation with controllers, routes, and middleware',
-      tests: 'Unit and integration test suites',
-      models: 'Data models and database schemas',
-      docker: 'Dockerfile and docker-compose configuration'
+    const project = projects.find(p => p.id === service.project_id);
+    
+    // Authorization check
+    const ownershipError = enforceOwnership(user, service, correlationId, logger);
+    if (ownershipError) return ownershipError;
+
+    // Prepare safe context
+    const codeContext = {
+      service: filterSensitiveForLLM({
+        name: sanitiseString(service.name, 100),
+        description: sanitiseString(service.description, 500),
+        category: service.category,
+        technologies: service.technologies || [],
+        apis: service.apis || []
+      }),
+      project: project ? {
+        name: sanitiseString(project.name, 100),
+        category: project.category,
+        architecture_pattern: project.architecture_pattern || 'microservices'
+      } : null,
+      options: {
+        language,
+        framework,
+        include_tests,
+        include_docker,
+        include_api,
+        architecture_pattern
+      }
     };
 
-    const generatedCode = await base44.integrations.Core.InvokeLLM({
-      prompt: `Generate ${codeTypes[code_type]} for this microservice.
-
-Service: ${service.name}
-Description: ${service.description}
-Technologies: ${service.technologies?.join(', ')}
-APIs: ${JSON.stringify(service.apis || [], null, 2)}
-Language: ${language}
-
-Generate production-ready code with:
-- Clean architecture patterns
-- Error handling
-- Logging
-- Input validation
-- Type safety
-- Documentation comments`,
-      response_json_schema: {
-        type: "object",
-        properties: {
-          files: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                path: { type: "string" },
-                content: { type: "string" },
-                description: { type: "string" }
-              }
-            }
-          },
-          project_structure: { type: "string" },
-          dependencies: {
+    // Generate code using Advanced CoT
+    const cotResult = await executeAdvancedCoTReasoning({
+      task: 'microservice_code_generation',
+      context: codeContext,
+      logger,
+      executor: async (ctx) => {
+        const prompt = buildCodeGenerationPrompt(ctx);
+        
+        return await base44.integrations.Core.InvokeLLM({
+          prompt,
+          response_json_schema: {
             type: "object",
             properties: {
-              production: {
+              files: {
                 type: "array",
-                items: { type: "string" }
+                items: {
+                  type: "object",
+                  properties: {
+                    path: { type: "string" },
+                    content: { type: "string" },
+                    description: { type: "string" },
+                    type: { type: "string", enum: ["source", "test", "config", "docker", "docs"] }
+                  },
+                  required: ["path", "content", "type"]
+                }
               },
-              development: {
+              project_structure: { 
+                type: "string",
+                description: "ASCII tree of the generated project structure"
+              },
+              dependencies: {
+                type: "object",
+                properties: {
+                  production: { type: "array", items: { type: "string" } },
+                  development: { type: "array", items: { type: "string" } }
+                }
+              },
+              setup_commands: {
                 type: "array",
-                items: { type: "string" }
+                items: { type: "string" },
+                description: "Commands to set up and run the service"
+              },
+              api_documentation: {
+                type: "string",
+                description: "Generated API documentation in markdown"
+              },
+              test_coverage_target: {
+                type: "number",
+                description: "Expected test coverage percentage"
               }
-            }
-          },
-          setup_commands: {
-            type: "array",
-            items: { type: "string" }
+            },
+            required: ["files", "project_structure", "dependencies", "setup_commands"]
           }
+        });
+      },
+      validator: (result) => {
+        // Validate generated code structure
+        if (!result.files || !Array.isArray(result.files)) {
+          return { valid: false, issues: ['Missing or invalid files array'] };
         }
+        
+        // Check required file types
+        const fileTypes = result.files.map(f => f.type);
+        const requiredTypes = ['source'];
+        if (include_tests && !fileTypes.includes('test')) {
+          return { valid: false, issues: ['Tests requested but not generated'] };
+        }
+        if (include_docker && !fileTypes.includes('docker')) {
+          return { valid: false, issues: ['Docker files requested but not generated'] };
+        }
+        
+        return { valid: true };
       }
     });
 
@@ -115,30 +177,161 @@ Generate production-ready code with:
     await base44.entities.CodeGeneration.create({
       service_id,
       project_id: service.project_id,
-      code_type,
       language,
-      files: generatedCode.files,
-      dependencies: generatedCode.dependencies
+      framework,
+      architecture_pattern,
+      files: cotResult.final_answer.files,
+      dependencies: cotResult.final_answer.dependencies,
+      project_structure: cotResult.final_answer.project_structure,
+      setup_commands: cotResult.final_answer.setup_commands,
+      metadata: {
+        include_tests,
+        include_docker,
+        include_api,
+        confidence: cotResult.confidence,
+        validated: cotResult.validated
+      }
     });
 
     logger.metric('code_generation_complete', Date.now() - startTime, {
       service_id,
-      code_type,
       language,
-      files_count: generatedCode.files?.length || 0
+      framework,
+      files_count: cotResult.final_answer.files?.length || 0,
+      confidence: cotResult.confidence,
+      stages_completed: cotResult.stages_completed?.length
     });
 
     return createSuccessResponse({
-      code: generatedCode,
+      code: cotResult.final_answer,
       generation_metadata: {
-        code_type,
         language,
-        generated_at: new Date().toISOString()
+        framework,
+        generated_at: new Date().toISOString(),
+        files_count: cotResult.final_answer.files?.length,
+        confidence: cotResult.confidence,
+        validated: cotResult.validated
+      },
+      reasoning: {
+        stages_completed: cotResult.stages_completed,
+        confidence: cotResult.confidence,
+        execution_time_ms: cotResult.execution_time_ms
       }
     }, correlationId);
 
   } catch (error) {
     logger.error('Code generation failed', error);
-    return createErrorResponse(ErrorCodes.INTERNAL, error.message, correlationId);
+    return createErrorResponse(ErrorCodes.INTERNAL, 'Code generation failed', correlationId);
   }
 });
+
+/**
+ * Build comprehensive code generation prompt with project context
+ */
+function buildCodeGenerationPrompt(context) {
+  const { service, project, options } = context;
+  const { language, framework, include_tests, include_docker, include_api, architecture_pattern } = options;
+
+  return `You are an expert software architect generating production-ready microservice code.
+
+CONTEXT:
+Project: ${project?.name || 'Standalone Service'}
+Project Category: ${project?.category || 'General'}
+Architecture: ${architecture_pattern}
+
+Service: ${service.name}
+Description: ${service.description}
+Category: ${service.category}
+Technologies: ${service.technologies.join(', ')}
+${service.apis?.length > 0 ? `Existing APIs:\n${JSON.stringify(service.apis, null, 2)}` : ''}
+
+TARGET:
+Language: ${language}
+Framework: ${framework}
+
+REQUIREMENTS:
+Generate a complete, production-ready microservice with:
+
+1. **Core Application Structure**
+   - Main application entry point
+   - Configuration management (env variables)
+   - Logging setup (structured JSON logs)
+   - Error handling middleware
+   - Health check endpoint (/health)
+   - Graceful shutdown handling
+
+${include_api ? `2. **API Layer**
+   - RESTful API endpoints with proper HTTP methods
+   - Request validation and sanitization
+   - Response formatting (success/error)
+   - API versioning (v1)
+   - Rate limiting middleware
+   - CORS configuration
+   - OpenAPI/Swagger documentation
+   - Example CRUD operations for a sample resource` : ''}
+
+3. **Data Layer**
+   - Data models/schemas with validation
+   - Database connection setup
+   - Migration scripts
+   - Repository pattern for data access
+   - Transaction handling
+
+${include_tests ? `4. **Testing Suite**
+   - Unit tests for business logic (80%+ coverage)
+   - Integration tests for API endpoints
+   - Test fixtures and mocks
+   - Test configuration
+   - Example tests showing best practices` : ''}
+
+${include_docker ? `5. **Docker Configuration**
+   - Production-optimized Dockerfile (multi-stage build)
+   - docker-compose.yml with all dependencies
+   - .dockerignore file
+   - Environment-specific configs (dev/prod)
+   - Health checks in containers
+   - Volume mounts for development` : ''}
+
+6. **Security Best Practices**
+   - Input validation on all endpoints
+   - SQL injection prevention
+   - XSS protection
+   - CSRF tokens (if needed)
+   - Secure headers (Helmet.js or equivalent)
+   - Authentication middleware stub
+   - Authorization checks
+
+7. **Observability**
+   - Structured logging with correlation IDs
+   - Metrics endpoints (Prometheus format)
+   - Error tracking integration points
+   - Performance monitoring hooks
+
+8. **Documentation**
+   - README.md with setup instructions
+   - API documentation
+   - Architecture decision records
+   - Contributing guidelines
+   - Environment variables documentation
+
+CODE QUALITY STANDARDS:
+- Follow ${language} best practices and idioms
+- Use ${framework} conventions
+- Clean code principles (DRY, SOLID)
+- Meaningful variable/function names
+- Comprehensive comments for complex logic
+- Type safety (TypeScript types, Python type hints, etc.)
+- Error handling at every layer
+- No hardcoded values (use config)
+
+DELIVERABLES:
+Return a complete file structure with:
+- All source code files
+- Configuration files
+- ${include_tests ? 'Test files' : ''}
+- ${include_docker ? 'Docker files' : ''}
+- Documentation files
+- Package/dependency management files
+
+Each file should be production-ready and deployable.`;
+}
