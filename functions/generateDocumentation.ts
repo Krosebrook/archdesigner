@@ -26,7 +26,7 @@ import {
  * - Audit logging
  */
 
-const ALLOWED_DOC_TYPES = ['full', 'readme', 'api', 'architecture'];
+const ALLOWED_DOC_TYPES = ['full', 'readme', 'api', 'architecture', 'adr', 'contributing', 'changelog'];
 
 Deno.serve(async (req) => {
   const correlationId = generateCorrelationId();
@@ -59,11 +59,14 @@ Deno.serve(async (req) => {
       return createErrorResponse(ErrorCodes.VALIDATION, enumValidation.error, correlationId);
     }
 
-    const [projects, services, cicd, apis] = await Promise.all([
+    const [projects, services, cicd, apis, tasks, securityFindings, integrations] = await Promise.all([
       base44.entities.Project.filter({ id: project_id }),
       base44.entities.Service.filter({ project_id }),
       base44.entities.CICDConfiguration.filter({ project_id }),
-      base44.entities.APIIntegration.filter({ project_id })
+      base44.entities.APIIntegration.filter({ project_id }),
+      base44.entities.Task.filter({ project_id }),
+      base44.entities.SecurityFinding.filter({ project_id }),
+      base44.entities.IntegrationConnection.filter({ project_id })
     ]);
 
     const project = projects[0];
@@ -79,10 +82,13 @@ Deno.serve(async (req) => {
     auditLog(logger, 'GENERATE_DOCUMENTATION', user, { project_id, doc_type });
 
     const docPrompts = {
-      full: `Generate comprehensive project documentation including overview, architecture, setup, and deployment.`,
-      readme: `Generate a professional README.md with badges, installation, and usage sections.`,
-      api: `Generate OpenAPI/Swagger documentation for all API endpoints.`,
-      architecture: `Generate detailed architecture documentation with diagrams (mermaid syntax).`
+      full: `Generate comprehensive project documentation including overview, architecture, setup, deployment, security, and contributing guidelines.`,
+      readme: `Generate a professional README.md with project overview, features, architecture, tech stack, getting started, project structure, and contributing.`,
+      api: `Generate complete API documentation with authentication, endpoints, request/response schemas, examples, error codes, and rate limiting.`,
+      architecture: `Generate detailed architecture documentation with system overview, patterns, service breakdown, data flow, technology decisions, scalability, and security.`,
+      adr: `Generate Architecture Decision Records (ADRs) documenting key technical decisions with context, decisions, and consequences.`,
+      contributing: `Generate comprehensive contributing guidelines with setup, workflow, code style, testing, PR process, and community guidelines.`,
+      changelog: `Generate a changelog following Keep a Changelog format with versions, dates, and categorized changes.`
     };
 
     // PHASE 2.1 & 2.3: Sanitise inputs and filter sensitive data before LLM
@@ -109,23 +115,41 @@ Deno.serve(async (req) => {
       }))
     );
 
+    const safeTasks = tasks.map(t => ({
+      title: sanitiseString(t.title, 200),
+      status: t.status,
+      priority_level: t.priority_level
+    }));
+
     // PHASE 2.1: Sanitise LLM prompt
     const prompt = sanitiseLLMInput(`${docPrompts[doc_type]}
 
-Project: ${safeProject.name}
+PROJECT CONTEXT:
+Name: ${safeProject.name}
 Description: ${safeProject.description}
 Category: ${safeProject.category}
 Architecture: ${safeProject.architecture_pattern}
 
-Services:
-${safeServices.map(s => `- ${s.name}: ${s.description} (${s.technologies?.join(', ')})`).join('\n')}
+SERVICES (${services.length}):
+${safeServices.map(s => `- ${s.name}: ${s.description}
+  Technologies: ${s.technologies?.join(', ')}`).join('\n')}
 
-CI/CD: ${cicd.length > 0 ? cicd[0].platform : 'Not configured'}
+CI/CD: ${cicd.length > 0 ? `${cicd[0].platform} with ${cicd[0].deployment_targets?.length || 0} deployment targets` : 'Not configured'}
 
-APIs:
+APIS (${apis.length}):
 ${safeApis.map(a => `- ${a.name}: ${a.base_url} (${a.endpoints_count} endpoints)`).join('\n')}
 
-Generate professional documentation in Markdown format.`);
+SECURITY STATUS:
+Total Findings: ${securityFindings.length}
+Critical: ${securityFindings.filter(f => f.severity === 'critical').length}
+
+INTEGRATIONS (${integrations.length}):
+${integrations.map(i => `- ${i.name} (${i.integration_type}): ${i.status}`).join('\n')}
+
+TASKS:
+${safeTasks.slice(0, 10).map(t => `- [${t.status}] [${t.priority_level}] ${t.title}`).join('\n')}
+
+Generate professional, production-ready documentation in Markdown format with proper structure, code blocks, and diagrams where appropriate.`);
 
     const documentation = await base44.integrations.Core.InvokeLLM({
       prompt,
