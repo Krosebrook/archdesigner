@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileCode2, FileText, GitBranch, BookOpen } from "lucide-react";
+import { FileCode2, FileText, GitBranch, BookOpen, Layers, Users } from "lucide-react";
 import { AnimatedHero } from "../shared/AnimatedHero";
 import { APIDocGenerator } from "./APIDocGenerator";
 import { ServiceDocumenter } from "./ServiceDocumenter";
 import { ChangelogGenerator } from "./ChangelogGenerator";
+import AutoDocsGenerator from "./AutoDocsGenerator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -20,8 +21,12 @@ export default function DocumentationIntelligenceHub({ project, services }) {
         gradient="from-indigo-900 via-purple-900 to-pink-900"
       />
 
-      <Tabs defaultValue="api">
-        <TabsList className="grid w-full grid-cols-3">
+      <Tabs defaultValue="auto">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="auto">
+            <BookOpen className="w-4 h-4 mr-2" />
+            Auto Docs
+          </TabsTrigger>
           <TabsTrigger value="api">
             <FileCode2 className="w-4 h-4 mr-2" />
             API Docs
@@ -35,6 +40,10 @@ export default function DocumentationIntelligenceHub({ project, services }) {
             Changelog
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="auto">
+          <AutoDocsGenerator project={project} />
+        </TabsContent>
 
         <TabsContent value="api">
           {services.length > 0 ? (
