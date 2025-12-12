@@ -5,6 +5,7 @@ import { AnimatedHero } from "../shared/AnimatedHero";
 import { VulnerabilityScanner } from "./VulnerabilityScanner";
 import { CICDSecurityAuditor } from "./CICDSecurityAuditor";
 import { DeploymentSecurityAnalyzer } from "./DeploymentSecurityAnalyzer";
+import SecurityAuditHub from "./SecurityAuditHub";
 import { SecurityFindingsPanel } from "../integrations/SecurityFindingsPanel";
 
 export default function SecurityIntelligenceHub({ project, services }) {
