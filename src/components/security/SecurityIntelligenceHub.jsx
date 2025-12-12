@@ -20,8 +20,12 @@ export default function SecurityIntelligenceHub({ project, services }) {
 
       <SecurityFindingsPanel project={project} />
 
-      <Tabs defaultValue="vulnerabilities" className="mt-6">
-        <TabsList className="grid w-full grid-cols-3">
+      <Tabs defaultValue="audit" className="mt-6">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="audit">
+            <Shield className="w-4 h-4 mr-2" />
+            AI Audit
+          </TabsTrigger>
           <TabsTrigger value="vulnerabilities">
             <Code className="w-4 h-4 mr-2" />
             Code Scan
@@ -35,6 +39,10 @@ export default function SecurityIntelligenceHub({ project, services }) {
             Deployment
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="audit">
+          <SecurityAuditHub project={project} services={services} />
+        </TabsContent>
 
         <TabsContent value="vulnerabilities">
           <VulnerabilityScanner project={project} />
