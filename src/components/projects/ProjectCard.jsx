@@ -1,13 +1,17 @@
-
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
+  Building2, 
   Server, 
   Database, 
   Zap, 
   ExternalLink,
-  MoreVertical 
+  MoreVertical,
+  Edit2,
+  Trash2,
+  Download
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -18,6 +22,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { base44 } from "@/api/base44Client";
+import { toast } from "sonner";
+import EditProjectModal from "./EditProjectModal";
+import DeleteConfirmDialog from "../shared/DeleteConfirmDialog";
 
 const statusColors = {
   planning: "bg-yellow-100 text-yellow-800 border-yellow-200",
@@ -37,32 +45,97 @@ const categoryGradients = {
 };
 
 export default function ProjectCard({ project, index, onUpdate }) {
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleExport = async (e) => {
+    e.stopPropagation();
+    try {
+      const [services, tasks, cicd] = await Promise.all([
+        base44.entities.Service.filter({ project_id: project.id }),
+        base44.entities.Task.filter({ project_id: project.id }),
+        base44.entities.CICDConfiguration.filter({ project_id: project.id })
+      ]);
+
+      const exportData = {
+        project,
+        services,
+        tasks,
+        cicd,
+        exported_at: new Date().toISOString()
+      };
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${project.name.replace(/\s+/g, '-').toLowerCase()}-export.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success("Project exported successfully");
+    } catch (error) {
+      console.error("Failed to export project:", error);
+      toast.error("Failed to export project");
+    }
+  };
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await base44.entities.Project.delete(project.id);
+      toast.success("Project deleted successfully");
+      onUpdate?.();
+      setShowDeleteDialog(false);
+    } catch (error) {
+      console.error("Failed to delete project:", error);
+      toast.error("Failed to delete project");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.1 }}
-      whileHover={{ y: -4 }}
-    >
-      <Card className="group bg-white hover:shadow-xl transition-all duration-300 border-0 shadow-md overflow-hidden">
-        {/* Header with gradient */}
-        <div className={`h-24 bg-gradient-to-r ${categoryGradients[project.category] || 'from-gray-500 to-gray-600'} relative overflow-hidden`}>
-          <div className="absolute inset-0 bg-black bg-opacity-20" />
-          <div className="absolute top-4 right-4">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
-                  <MoreVertical className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem>Edit Project</DropdownMenuItem>
-                <DropdownMenuItem>Duplicate</DropdownMenuItem>
-                <DropdownMenuItem className="text-red-600">Archive</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.1 }}
+        whileHover={{ y: -4 }}
+      >
+        <Card className="group bg-white hover:shadow-xl transition-all duration-300 border-0 shadow-md overflow-hidden">
+          {/* Header with gradient */}
+          <div className={`h-24 bg-gradient-to-r ${categoryGradients[project.category] || 'from-gray-500 to-gray-600'} relative overflow-hidden`}>
+            <div className="absolute inset-0 bg-black bg-opacity-20" />
+            <div className="absolute top-4 right-4">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
+                    <MoreVertical className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setShowEditModal(true); }}>
+                    <Edit2 className="w-4 h-4 mr-2" />
+                    Edit Project
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleExport}>
+                    <Download className="w-4 h-4 mr-2" />
+                    Export JSON
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="text-red-600"
+                    onClick={(e) => { e.stopPropagation(); setShowDeleteDialog(true); }}
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
-        </div>
 
         <CardHeader className="relative -mt-8 px-6 pb-4">
           <div className="flex items-start justify-between">
@@ -126,5 +199,23 @@ export default function ProjectCard({ project, index, onUpdate }) {
         </CardContent>
       </Card>
     </motion.div>
+
+    <EditProjectModal
+      open={showEditModal}
+      onOpenChange={setShowEditModal}
+      project={project}
+      onSuccess={onUpdate}
+    />
+
+    <DeleteConfirmDialog
+      open={showDeleteDialog}
+      onOpenChange={setShowDeleteDialog}
+      title="Delete Project"
+      description="This will permanently delete this project and all associated services, tasks, and configurations."
+      itemName={project.name}
+      onConfirm={handleDelete}
+      isDeleting={isDeleting}
+    />
+    </>
   );
 }
