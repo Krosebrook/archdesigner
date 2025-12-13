@@ -3,6 +3,8 @@ import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Building2, BarChart3, Layers3, Zap, Bot } from "lucide-react";
 import PWAInstaller from "./components/shared/PWAInstaller";
+import UserMenu from "./components/shared/UserMenu";
+import KeyboardShortcuts from "./components/shared/KeyboardShortcuts";
 import {
   Sidebar,
   SidebarContent,
@@ -80,6 +82,7 @@ export default function Layout({ children }) {
 
     return (
     <SidebarProvider>
+      <KeyboardShortcuts />
       <div className="min-h-screen flex w-full">
         <style jsx>{`
           :root {
@@ -88,10 +91,10 @@ export default function Layout({ children }) {
             --gradient-accent: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
           }
         `}</style>
-        
+
         <Sidebar className="border-r border-gray-100 bg-white">
-          <SidebarHeader className="border-b border-gray-100 p-6">
-            <div className="flex items-center gap-3">
+          <SidebarHeader className="border-b border-gray-100 p-4">
+            <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
                 <Zap className="w-6 h-6 text-white" />
               </div>
@@ -100,6 +103,7 @@ export default function Layout({ children }) {
                 <p className="text-sm text-gray-500 font-medium">Microservices Platform</p>
               </div>
             </div>
+            <UserMenu />
           </SidebarHeader>
           
           <SidebarContent className="p-4">
