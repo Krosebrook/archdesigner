@@ -4,6 +4,7 @@ import Analytics from './pages/Analytics';
 import ProjectDetail from './pages/ProjectDetail';
 import Agents from './pages/Agents';
 import CustomDashboard from './pages/CustomDashboard';
+import Settings from './pages/Settings';
 import __Layout from './Layout.jsx';
 
 
@@ -14,6 +15,7 @@ export const PAGES = {
     "ProjectDetail": ProjectDetail,
     "Agents": Agents,
     "CustomDashboard": CustomDashboard,
+    "Settings": Settings,
 }
 
 export const pagesConfig = {
