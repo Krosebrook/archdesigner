@@ -5,8 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Code, Loader2, Download, Copy, CheckCircle2 } from "lucide-react";
+import { Code, Loader2, Download, Copy, CheckCircle2, FileArchive } from "lucide-react";
 import { motion } from "framer-motion";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
+import { toast } from "sonner";
 
 const languages = [
   { value: "typescript", label: "TypeScript", frameworks: ["Node.js/Express", "NestJS", "Fastify"] },
@@ -164,6 +167,42 @@ ${includeCICD ? '- cicd_config: CI/CD pipeline configuration' : ''}`;
     });
   };
 
+  const downloadAsZip = async () => {
+    if (!generatedCode?.file_structure) return;
+    
+    try {
+      const zip = new JSZip();
+      
+      // Add all generated files to ZIP
+      generatedCode.file_structure.forEach(file => {
+        zip.file(file.path, file.content);
+      });
+      
+      // Add README with setup instructions
+      if (generatedCode.setup_instructions) {
+        zip.file("README.md", generatedCode.setup_instructions);
+      }
+      
+      // Add CI/CD config if present
+      if (generatedCode.cicd_config) {
+        const cicdFilename = selectedCICD === 'github' ? '.github/workflows/ci.yml' :
+                            selectedCICD === 'gitlab' ? '.gitlab-ci.yml' :
+                            selectedCICD === 'jenkins' ? 'Jenkinsfile' :
+                            'ci-cd-config.yml';
+        zip.file(cicdFilename, generatedCode.cicd_config);
+      }
+      
+      // Generate and download ZIP
+      const content = await zip.generateAsync({ type: "blob" });
+      const serviceName = services.find(s => s.id === selectedService)?.name || 'generated-service';
+      saveAs(content, `${serviceName}-${selectedLanguage}.zip`);
+      toast.success("Downloaded project as ZIP");
+    } catch (error) {
+      console.error("Failed to create ZIP:", error);
+      toast.error("Failed to create ZIP file");
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card className="bg-gradient-to-br from-violet-50 to-blue-50 border-0 shadow-lg">
@@ -298,10 +337,16 @@ ${includeCICD ? '- cicd_config: CI/CD pipeline configuration' : ''}`;
             <CardHeader>
               <div className="flex justify-between items-center">
                 <CardTitle className="text-lg">Generated Files</CardTitle>
-                <Button onClick={downloadAll} variant="outline" size="sm">
-                  <Download className="w-4 h-4 mr-2" />
-                  Download All
-                </Button>
+                <div className="flex gap-2">
+                  <Button onClick={downloadAsZip} variant="default" size="sm" className="bg-gradient-to-r from-blue-600 to-purple-600">
+                    <FileArchive className="w-4 h-4 mr-2" />
+                    Download ZIP
+                  </Button>
+                  <Button onClick={downloadAll} variant="outline" size="sm">
+                    <Download className="w-4 h-4 mr-2" />
+                    Individual Files
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
