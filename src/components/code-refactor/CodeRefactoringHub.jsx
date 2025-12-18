@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import PropTypes from "prop-types";
 import CodeSmellDetector from "./CodeSmellDetector";
 import RefactoringEngine from "./RefactoringEngine";
 import { AnimatedHero } from "../shared/AnimatedHero";
@@ -27,7 +28,7 @@ const improvementCategories = [
   { id: "maintainability", label: "Maintainability", icon: TrendingUp, color: "text-green-600" }
 ];
 
-export default function CodeRefactoringHub({ project, services }) {
+function CodeRefactoringHub({ project, services = [] }) {
   const [activeTab, setActiveTab] = useState("analyzer");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState(null);
@@ -366,3 +367,18 @@ Return comprehensive analysis with actionable recommendations.`;
     </div>
   );
 }
+
+CodeRefactoringHub.propTypes = {
+  project: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    name: PropTypes.string.isRequired,
+    description: PropTypes.string
+  }).isRequired,
+  services: PropTypes.arrayOf(PropTypes.shape({
+    id: PropTypes.string,
+    name: PropTypes.string,
+    category: PropTypes.string
+  }))
+};
+
+export default CodeRefactoringHub;

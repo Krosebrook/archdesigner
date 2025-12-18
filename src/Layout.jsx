@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Building2, BarChart3, Layers3, Zap, Bot } from "lucide-react";
 import { motion } from "framer-motion";
+import PropTypes from "prop-types";
 import PWAInstaller from "./components/shared/PWAInstaller";
 import UserMenu from "./components/shared/UserMenu";
 import KeyboardShortcuts from "./components/shared/KeyboardShortcuts";
@@ -48,7 +49,7 @@ const navigationItems = [
   },
 ];
 
-export default function Layout({ children }) {
+function Layout({ children }) {
     const location = useLocation();
 
     // Register PWA meta tags dynamically
@@ -219,7 +220,13 @@ export default function Layout({ children }) {
 
           {/* PWA Install Prompt */}
           <PWAInstaller />
-          </div>
-          </SidebarProvider>
-          );
-          }
+        </div>
+      </SidebarProvider>
+    );
+}
+
+Layout.propTypes = {
+  children: PropTypes.node.isRequired
+};
+
+export default Layout;

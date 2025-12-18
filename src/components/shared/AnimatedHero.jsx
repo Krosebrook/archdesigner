@@ -1,14 +1,15 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion } from "framer-motion";
+import PropTypes from "prop-types";
 
-export const AnimatedHero = ({ 
+export function AnimatedHero({ 
   icon: Icon,
   title,
-  description,
-  children,
+  description = null,
+  children = null,
   gradient = "from-slate-900 via-indigo-900 to-purple-900"
-}) => {
+}) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -42,4 +43,12 @@ export const AnimatedHero = ({
       </Card>
     </motion.div>
   );
+}
+
+AnimatedHero.propTypes = {
+  icon: PropTypes.elementType.isRequired,
+  title: PropTypes.string.isRequired,
+  description: PropTypes.string,
+  children: PropTypes.node,
+  gradient: PropTypes.string
 };

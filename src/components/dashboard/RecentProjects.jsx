@@ -1,3 +1,4 @@
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
+import PropTypes from "prop-types";
 
 const statusColors = {
   planning: "bg-yellow-100 text-yellow-800 border-yellow-200",
@@ -24,7 +26,7 @@ const categoryColors = {
   platform: "bg-orange-100 text-orange-800"
 };
 
-export default function RecentProjects({ projects, services, isLoading }) {
+function RecentProjects({ projects = [], services = [], isLoading = false }) {
   const recentProjects = projects.slice(0, 6);
   
   const getProjectServiceCount = (projectId) => {
@@ -112,3 +114,20 @@ export default function RecentProjects({ projects, services, isLoading }) {
     </Card>
   );
 }
+
+RecentProjects.propTypes = {
+  projects: PropTypes.arrayOf(PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    name: PropTypes.string.isRequired,
+    description: PropTypes.string,
+    category: PropTypes.string,
+    status: PropTypes.string,
+    icon: PropTypes.string
+  })),
+  services: PropTypes.arrayOf(PropTypes.shape({
+    project_id: PropTypes.string
+  })),
+  isLoading: PropTypes.bool
+};
+
+export default RecentProjects;
