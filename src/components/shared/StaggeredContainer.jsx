@@ -1,14 +1,15 @@
 import React from "react";
 import { motion } from "framer-motion";
+import PropTypes from "prop-types";
 
 /**
  * Staggered animation container for child elements
  * Implements cinema-grade entrance animations
  */
-export default function StaggeredContainer({ 
+function StaggeredContainer({ 
   children, 
   staggerDelay = 0.1,
-  className 
+  className = ""
 }) {
   const container = {
     hidden: { opacity: 0 },
@@ -55,3 +56,11 @@ export default function StaggeredContainer({
     </motion.div>
   );
 }
+
+StaggeredContainer.propTypes = {
+  children: PropTypes.node.isRequired,
+  staggerDelay: PropTypes.number,
+  className: PropTypes.string
+};
+
+export default StaggeredContainer;

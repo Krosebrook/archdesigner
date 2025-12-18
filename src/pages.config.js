@@ -1,20 +1,22 @@
-import Dashboard from './pages/Dashboard';
-import Projects from './pages/Projects';
-import Analytics from './pages/Analytics';
-import ProjectDetail from './pages/ProjectDetail';
 import Agents from './pages/Agents';
+import Analytics from './pages/Analytics';
 import CustomDashboard from './pages/CustomDashboard';
+import Dashboard from './pages/Dashboard';
+import Home from './pages/Home';
+import ProjectDetail from './pages/ProjectDetail';
+import Projects from './pages/Projects';
 import Settings from './pages/Settings';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
-    "Dashboard": Dashboard,
-    "Projects": Projects,
-    "Analytics": Analytics,
-    "ProjectDetail": ProjectDetail,
     "Agents": Agents,
+    "Analytics": Analytics,
     "CustomDashboard": CustomDashboard,
+    "Dashboard": Dashboard,
+    "Home": Home,
+    "ProjectDetail": ProjectDetail,
+    "Projects": Projects,
     "Settings": Settings,
 }
 

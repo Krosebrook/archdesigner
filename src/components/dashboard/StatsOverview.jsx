@@ -1,7 +1,9 @@
+import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Building2, Server, TrendingUp, Database } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
+import PropTypes from "prop-types";
 
 const statItems = [
   {
@@ -34,7 +36,7 @@ const statItems = [
   }
 ];
 
-export default function StatsOverview({ stats, isLoading }) {
+function StatsOverview({ stats = {}, isLoading = false }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       {statItems.map((item, index) => (
@@ -78,3 +80,15 @@ export default function StatsOverview({ stats, isLoading }) {
     </div>
   );
 }
+
+StatsOverview.propTypes = {
+  stats: PropTypes.shape({
+    totalProjects: PropTypes.number,
+    totalServices: PropTypes.number,
+    activeProjects: PropTypes.number,
+    totalIntegrations: PropTypes.number
+  }),
+  isLoading: PropTypes.bool
+};
+
+export default StatsOverview;

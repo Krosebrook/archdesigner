@@ -121,7 +121,7 @@ export default function Dashboard() {
             <SystemHealth stats={stats} />
           </div>
         </StaggeredContainer>
-        </div>
-        </div>
-        );
+      </div>
+    </div>
+  );
 }

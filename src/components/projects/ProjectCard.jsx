@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
-  Building2, 
   Server, 
   Database, 
   Zap, 
@@ -24,6 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
+import PropTypes from "prop-types";
 import EditProjectModal from "./EditProjectModal";
 import DeleteConfirmDialog from "../shared/DeleteConfirmDialog";
 
@@ -44,7 +44,7 @@ const categoryGradients = {
   platform: "from-orange-500 to-red-600"
 };
 
-export default function ProjectCard({ project, index, onUpdate }) {
+function ProjectCard({ project, index = 0, onUpdate }) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -219,3 +219,21 @@ export default function ProjectCard({ project, index, onUpdate }) {
     </>
   );
 }
+
+ProjectCard.propTypes = {
+  project: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    name: PropTypes.string.isRequired,
+    description: PropTypes.string,
+    category: PropTypes.string,
+    status: PropTypes.string,
+    icon: PropTypes.string,
+    services_count: PropTypes.number,
+    databases_count: PropTypes.number,
+    integrations_count: PropTypes.number
+  }).isRequired,
+  index: PropTypes.number,
+  onUpdate: PropTypes.func
+};
+
+export default ProjectCard;

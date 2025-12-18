@@ -3,18 +3,20 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
+import PropTypes from "prop-types";
 
 /**
  * Professional button with micro-interactions
  * Implements spring physics and anticipation
  */
-export default function CinematicButton({ 
+function CinematicButton({ 
   children,
-  isLoading,
+  isLoading = false,
   loadingText = "Loading...",
-  className,
+  className = "",
   variant = "default",
   size = "default",
+  disabled = false,
   ...props 
 }) {
   const buttonVariants = {
@@ -50,7 +52,7 @@ export default function CinematicButton({
           "shadow-lg hover:shadow-xl",
           className
         )}
-        disabled={isLoading}
+        disabled={isLoading || disabled}
         variant={variant}
         size={size}
         {...props}
@@ -67,3 +69,15 @@ export default function CinematicButton({
     </motion.div>
   );
 }
+
+CinematicButton.propTypes = {
+  children: PropTypes.node.isRequired,
+  isLoading: PropTypes.bool,
+  loadingText: PropTypes.string,
+  className: PropTypes.string,
+  variant: PropTypes.string,
+  size: PropTypes.string,
+  disabled: PropTypes.bool
+};
+
+export default CinematicButton;

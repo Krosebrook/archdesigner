@@ -2,17 +2,18 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import PropTypes from "prop-types";
 
 /**
  * Cinema-grade card component with professional lighting and depth
  * Features: glassmorphism, soft shadows, hover states with physics
  */
-export default function CinematicCard({ 
+function CinematicCard({ 
   children, 
-  className,
-  variant = "default", // default | glass | elevated | flat
+  className = "",
+  variant = "default",
   hoverEffect = true,
-  glowColor,
+  glowColor = null,
   ...props 
 }) {
   const variants = {
@@ -62,3 +63,13 @@ export default function CinematicCard({
     </motion.div>
   );
 }
+
+CinematicCard.propTypes = {
+  children: PropTypes.node.isRequired,
+  className: PropTypes.string,
+  variant: PropTypes.oneOf(["default", "glass", "elevated", "flat"]),
+  hoverEffect: PropTypes.bool,
+  glowColor: PropTypes.string
+};
+
+export default CinematicCard;
