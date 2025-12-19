@@ -64,11 +64,22 @@ export default function RefactoringEngine({ project, services, analysis, selecte
 
       const results = [];
 
+      const targetService = services.find(s => s.id === selectedServiceId);
+      const serviceName = targetService ? targetService.name : "Selected Service";
+
+      // Get relevant historical context
+      const historicalContext = await getRelevantContext(project.id, 5);
+
       for (let i = 0; i < selectedIssueData.length; i++) {
         const issue = selectedIssueData[i];
         
         // Simulate applying refactoring
         const prompt = `Apply the following refactoring:
+
+HISTORICAL CONTEXT (past decisions):
+${historicalContext}
+
+REFACTORING TO APPLY:
 
 ISSUE: ${issue.title}
 DESCRIPTION: ${issue.description}
