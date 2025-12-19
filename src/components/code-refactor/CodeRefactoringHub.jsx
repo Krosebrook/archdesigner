@@ -474,7 +474,8 @@ Return comprehensive, actionable analysis.`;
                   </Card>
                 </motion.div>
               ))}
-            </AnimatePresence>
+              </AnimatePresence>
+            </>
           )}
         </TabsContent>
 
