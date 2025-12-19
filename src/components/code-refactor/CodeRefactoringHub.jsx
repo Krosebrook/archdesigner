@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Wand2, 
   AlertCircle, 
@@ -12,7 +13,8 @@ import {
   Zap,
   TrendingUp,
   FileCode,
-  Loader2
+  Loader2,
+  Filter
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -32,39 +34,61 @@ function CodeRefactoringHub({ project, services = [] }) {
   const [activeTab, setActiveTab] = useState("analyzer");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState(null);
-  const [selectedService, setSelectedService] = useState(null);
+  const [selectedService, setSelectedService] = useState("all");
+  const [filterSeverity, setFilterSeverity] = useState("all");
+  const [filterCategory, setFilterCategory] = useState("all");
 
-  const analyzeProject = async () => {
+  const analyzeService = async (serviceId) => {
     setIsAnalyzing(true);
     try {
-      // Get all code generations for this project
-      const codeGenerations = await base44.entities.CodeGeneration.filter({ 
-        project_id: project.id 
-      });
+      const targetServices = serviceId === "all" 
+        ? services 
+        : services.filter(s => s.id === serviceId);
 
-      const prompt = `Analyze the following project for code quality improvements:
+      const serviceDetails = targetServices.map(s => ({
+        id: s.id,
+        name: s.name,
+        category: s.category,
+        technologies: s.technologies || [],
+        boilerplate_code: s.boilerplate_code
+      }));
+
+      const prompt = `You are a senior software architect and code quality expert. Analyze the following ${serviceId === "all" ? "project" : "service"} for code quality improvements:
 
 PROJECT: ${project.name}
 DESCRIPTION: ${project.description}
-SERVICES: ${services.map(s => `${s.name} (${s.category})`).join(', ')}
+${serviceId === "all" 
+  ? `SERVICES: ${serviceDetails.map(s => `${s.name} (${s.category})`).join(', ')}`
+  : `SERVICE: ${serviceDetails[0].name} (${serviceDetails[0].category})
+TECHNOLOGIES: ${serviceDetails[0].technologies.join(', ')}`
+}
 
-Analyze for:
-1. DRY Violations - Repeated code patterns that should be abstracted
-2. Code Complexity - Functions or modules that are too complex
-3. Performance Issues - Inefficient patterns or algorithms
-4. Maintainability - Code that's hard to understand or modify
-5. Best Practice Violations - Patterns that don't follow industry standards
+Perform deep code analysis for:
+1. **DRY Violations** - Repeated code patterns, duplicated logic
+2. **Code Complexity** - Cyclomatic complexity, deeply nested logic, long methods
+3. **Performance Issues** - N+1 queries, inefficient algorithms, memory leaks, unnecessary re-renders
+4. **Maintainability** - Poor naming, lack of comments, tight coupling, God objects
+5. **Security Vulnerabilities** - SQL injection risks, XSS vulnerabilities, insecure dependencies
+6. **Best Practice Violations** - Missing error handling, inconsistent patterns, anti-patterns
 
-For each issue found, provide:
-- Category (dry, complexity, performance, maintainability)
-- Severity (critical, high, medium, low)
-- Location/Pattern description
-- Current code example
-- Suggested refactored code
-- Impact/Benefits of the change
-- Estimated effort
+For EACH issue found, provide:
+- id: unique identifier
+- category: (dry, complexity, performance, maintainability, security)
+- severity: (critical, high, medium, low)
+- title: concise issue title
+- description: detailed explanation of the problem
+- location: file path or component name
+- current_code: actual problematic code snippet
+- refactored_code: improved code with comments
+- benefits: array of specific improvements
+- effort: (quick-win, hours, days)
+- service_id: "${serviceId === "all" ? "assign to appropriate service" : serviceDetails[0].id}"
+- performance_impact: estimated improvement percentage
+- technical_debt_score: 0-100
 
-Return comprehensive analysis with actionable recommendations.`;
+Analyze actual code patterns from the tech stack: ${serviceDetails.map(s => s.technologies.join(', ')).join('; ')}
+
+Return comprehensive, actionable analysis.`;
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt,
@@ -88,7 +112,9 @@ Return comprehensive analysis with actionable recommendations.`;
                   refactored_code: { type: "string" },
                   benefits: { type: "array", items: { type: "string" } },
                   effort: { type: "string" },
-                  service_id: { type: "string" }
+                  service_id: { type: "string" },
+                  performance_impact: { type: "string" },
+                  technical_debt_score: { type: "number" }
                 }
               }
             },
@@ -187,25 +213,47 @@ Return comprehensive analysis with actionable recommendations.`;
                 Code Quality Analysis
               </CardTitle>
               <CardDescription>
-                Scan your codebase for improvement opportunities
+                Deep AI-powered analysis for specific services or entire project
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <Filter className="w-4 h-4" />
+                  Select Service to Analyze
+                </label>
+                <Select value={selectedService} onValueChange={setSelectedService}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">
+                      <span className="font-semibold">All Services (Complete Project)</span>
+                    </SelectItem>
+                    {services.map(service => (
+                      <SelectItem key={service.id} value={service.id}>
+                        {service.name} • {service.category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <Button
-                onClick={analyzeProject}
-                disabled={isAnalyzing}
+                onClick={() => analyzeService(selectedService)}
+                disabled={isAnalyzing || services.length === 0}
                 className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
                 size="lg"
               >
                 {isAnalyzing ? (
                   <>
                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Analyzing Codebase...
+                    Analyzing {selectedService === "all" ? "All Services" : "Service"}...
                   </>
                 ) : (
                   <>
                     <Wand2 className="w-5 h-5 mr-2" />
-                    Start AI Analysis
+                    Analyze {selectedService === "all" ? "Complete Project" : "Selected Service"}
                   </>
                 )}
               </Button>
@@ -268,8 +316,67 @@ Return comprehensive analysis with actionable recommendations.`;
               </CardContent>
             </Card>
           ) : (
-            <AnimatePresence mode="popLayout">
-              {analysis.issues?.map((issue, idx) => (
+            <>
+              {/* Filters */}
+              <Card className="bg-gradient-to-r from-gray-50 to-slate-50">
+                <CardContent className="pt-6">
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600 mb-2 block">Filter by Service</label>
+                      <Select value={filterSeverity === "all" ? "all-services" : filterSeverity} onValueChange={(val) => setFilterSeverity(val === "all-services" ? "all" : val)}>
+                        <SelectTrigger className="text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all-services">All Services</SelectItem>
+                          {services.map(s => (
+                            <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600 mb-2 block">Filter by Severity</label>
+                      <Select value={filterSeverity} onValueChange={setFilterSeverity}>
+                        <SelectTrigger className="text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Severity</SelectItem>
+                          <SelectItem value="critical">Critical</SelectItem>
+                          <SelectItem value="high">High</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="low">Low</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600 mb-2 block">Filter by Category</label>
+                      <Select value={filterCategory} onValueChange={setFilterCategory}>
+                        <SelectTrigger className="text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Categories</SelectItem>
+                          <SelectItem value="dry">DRY Violations</SelectItem>
+                          <SelectItem value="complexity">Complexity</SelectItem>
+                          <SelectItem value="performance">Performance</SelectItem>
+                          <SelectItem value="maintainability">Maintainability</SelectItem>
+                          <SelectItem value="security">Security</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <AnimatePresence mode="popLayout">
+                {analysis.issues
+                  ?.filter(issue => 
+                    (filterSeverity === "all" || issue.severity === filterSeverity) &&
+                    (filterCategory === "all" || issue.category === filterCategory)
+                  )
+                  .map((issue, idx) => (
                 <motion.div
                   key={issue.id || idx}
                   initial={{ opacity: 0, y: 20 }}
@@ -320,6 +427,22 @@ Return comprehensive analysis with actionable recommendations.`;
                         <pre className="bg-green-50 border border-green-200 rounded-lg p-3 text-xs overflow-x-auto">
                           {issue.refactored_code}
                         </pre>
+                      </div>
+
+                      {/* Metrics */}
+                      <div className="grid grid-cols-2 gap-3">
+                        {issue.performance_impact && (
+                          <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
+                            <div className="text-xs text-purple-700 mb-1">Performance Impact</div>
+                            <div className="text-lg font-bold text-purple-900">{issue.performance_impact}</div>
+                          </div>
+                        )}
+                        {issue.technical_debt_score && (
+                          <div className="p-3 bg-orange-50 rounded-lg border border-orange-200">
+                            <div className="text-xs text-orange-700 mb-1">Tech Debt Score</div>
+                            <div className="text-lg font-bold text-orange-900">{issue.technical_debt_score}/100</div>
+                          </div>
+                        )}
                       </div>
 
                       {/* Benefits */}
