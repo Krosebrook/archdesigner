@@ -43,6 +43,7 @@ import SecurityIntelligenceHub from "../security/SecurityIntelligenceHub";
 import IntegrationHub from "../integrations/IntegrationHub";
 import APIIntegrationHub from "../api/APIIntegrationHub";
 import AdvancedAnalyticsDashboard from "../analytics/AdvancedAnalyticsDashboard";
+import AIDeploymentAutomation from "../deployment/AIDeploymentAutomation";
 
 export const tabConfig = [
   { id: "assistant", label: "AI Assistant", icon: Bot, component: AIProjectAssistant, props: ["project", "services"] },
@@ -80,5 +81,6 @@ export const tabConfig = [
   { id: "insights", label: "Insights", icon: BarChart3, component: TemplateInsights, props: [] },
   { id: "ai-viz", label: "Visualize", icon: Eye, component: AIArchitectureVisualizer, props: ["project", "services"] },
   { id: "auto-deploy", label: "Deploy", icon: Rocket, component: CICDAutomationEngine, props: ["project", "services"] },
+  { id: "deployment-automation", label: "Deployment AI", icon: Rocket, component: AIDeploymentAutomation, props: ["project", "services"] },
   { id: "template-ai", label: "Template AI", icon: Wand2, component: AdvancedTemplateIntelligence, props: ["project"] }
 ];
