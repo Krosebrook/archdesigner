@@ -50,6 +50,8 @@ import ProjectKnowledgeGraph from "../ai-context/ProjectKnowledgeGraph";
 
 export const tabConfig = [
   { id: "assistant", label: "AI Assistant", icon: Bot, component: AIProjectAssistant, props: ["project", "services"] },
+  { id: "ai-context", label: "AI Memory", icon: Brain, component: AIContextManager, props: ["project"] },
+  { id: "knowledge-graph", label: "Knowledge Graph", icon: Network, component: ProjectKnowledgeGraph, props: ["project", "services"] },
   { id: "knowledge", label: "Knowledge Base", icon: BookOpen, component: KnowledgeBaseHub, props: ["project", "services"] },
   { id: "health", label: "Health", icon: Activity, component: ProjectHealthDashboard, props: ["project", "services"] },
   { id: "visual", label: "Visual", icon: Network, component: VisualEditor, props: ["services", "onUpdateService", "onDeleteService"] },
