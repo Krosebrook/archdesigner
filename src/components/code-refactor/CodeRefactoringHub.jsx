@@ -21,6 +21,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import PropTypes from "prop-types";
 import CodeSmellDetector from "./CodeSmellDetector";
 import RefactoringEngine from "./RefactoringEngine";
+import AITestGenerator from "../testing/AITestGenerator";
 import { AnimatedHero } from "../shared/AnimatedHero";
 
 const improvementCategories = [
@@ -199,10 +200,11 @@ Return comprehensive, actionable analysis.`;
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="analyzer">Code Analyzer</TabsTrigger>
           <TabsTrigger value="suggestions">Suggestions</TabsTrigger>
           <TabsTrigger value="engine">Auto-Refactor</TabsTrigger>
+          <TabsTrigger value="tests">Test Generator</TabsTrigger>
         </TabsList>
 
         <TabsContent value="analyzer" className="space-y-4">
@@ -485,6 +487,14 @@ Return comprehensive, actionable analysis.`;
             services={services}
             analysis={analysis}
             selectedServiceId={selectedService}
+          />
+        </TabsContent>
+
+        <TabsContent value="tests">
+          <AITestGenerator 
+            project={project} 
+            services={services}
+            analysis={analysis}
           />
         </TabsContent>
       </Tabs>
