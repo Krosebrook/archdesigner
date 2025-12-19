@@ -1,10 +1,13 @@
+import React, { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { motion } from "framer-motion";
+import PropTypes from "prop-types";
 
-export default function TrendingTechnologies({ services, isLoading }) {
-  const getTrendingTechs = () => {
+function TrendingTechnologies({ services = [], isLoading = false }) {
+  const trendingTechs = useMemo(() => {
     const techCount = {};
     services.forEach(service => {
       if (service.technologies) {
@@ -17,9 +20,7 @@ export default function TrendingTechnologies({ services, isLoading }) {
     return Object.entries(techCount)
       .sort(([,a], [,b]) => b - a)
       .slice(0, 8);
-  };
-
-  const trendingTechs = getTrendingTechs();
+  }, [services]);
 
   const techColors = [
     "bg-blue-100 text-blue-800",
@@ -55,12 +56,18 @@ export default function TrendingTechnologies({ services, isLoading }) {
         ) : (
           <div className="space-y-3">
             {trendingTechs.map(([tech, count], index) => (
-              <div key={tech} className="flex items-center justify-between">
+              <motion.div
+                key={tech}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="flex items-center justify-between"
+              >
                 <span className="text-sm font-medium text-gray-700">{tech}</span>
                 <Badge className={`${techColors[index % techColors.length]} text-xs`}>
                   {count}
                 </Badge>
-              </div>
+              </motion.div>
             ))}
           </div>
         )}
@@ -68,3 +75,12 @@ export default function TrendingTechnologies({ services, isLoading }) {
     </Card>
   );
 }
+
+TrendingTechnologies.propTypes = {
+  services: PropTypes.arrayOf(PropTypes.shape({
+    technologies: PropTypes.arrayOf(PropTypes.string)
+  })),
+  isLoading: PropTypes.bool
+};
+
+export default TrendingTechnologies;
