@@ -34,7 +34,7 @@ export default function ProjectsPage() {
 
   const handleCreateProject = async (projectData) => {
     try {
-      const { selectedTemplates, projectTemplateId, templateConfig, enableAIOnboarding, ...projectFields } = projectData;
+      const { selectedTemplates, projectTemplateId, templateConfig, enableAIOnboarding, aiGeneratedServices, ...projectFields } = projectData;
       
       // Create project
       const newProject = await base44.entities.Project.create(projectFields);
@@ -110,17 +110,42 @@ export default function ProjectsPage() {
           })
         );
         await Promise.all(updatePromises);
-        
+
         // Update project service count
         const currentCount = await base44.entities.Project.list();
         const project = currentCount.find(p => p.id === newProject.id);
         await base44.entities.Project.update(newProject.id, {
           services_count: (project?.services_count || 0) + selectedTemplates.length
         });
-      }
-      
-      setShowCreateModal(false);
-      loadProjects();
+        }
+
+        // If AI-generated services exist, create them
+        if (aiGeneratedServices && aiGeneratedServices.length > 0) {
+        const aiServicePromises = aiGeneratedServices.map(aiService =>
+          base44.entities.Service.create({
+            project_id: newProject.id,
+            name: aiService.name,
+            description: aiService.purpose,
+            category: aiService.category,
+            technologies: [aiService.technology, ...(aiService.dependencies || [])],
+            apis: aiService.api_endpoints || [],
+            position: { x: Math.random() * 400 + 100, y: Math.random() * 300 + 100 },
+            database_schema: aiService.database_schema,
+            boilerplate_code: aiService.boilerplate_code,
+            dockerfile: aiService.dockerfile
+          })
+        );
+
+        await Promise.all(aiServicePromises);
+
+        // Update project service count
+        await base44.entities.Project.update(newProject.id, {
+          services_count: (newProject.services_count || 0) + aiGeneratedServices.length
+        });
+        }
+
+        setShowCreateModal(false);
+        loadProjects();
     } catch (error) {
       console.error("Error creating project:", error);
     }

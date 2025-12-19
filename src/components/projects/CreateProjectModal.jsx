@@ -13,9 +13,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { motion } from "framer-motion";
-import { Sparkles, Loader2, RefreshCw, TrendingUp, Zap } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Sparkles, Loader2, TrendingUp, Zap, ArrowRight } from "lucide-react";
+import PropTypes from "prop-types";
 import { autoOnboardProject } from "./AIProjectOnboarding";
+import AIServiceGenerator from "./AIServiceGenerator";
 
 const categories = [
   { value: "desktop", label: "Desktop Application", icon: "🖥️" },
@@ -33,7 +35,8 @@ const statuses = [
   { value: "deployed", label: "Deployed" }
 ];
 
-export default function CreateProjectModal({ isOpen, onClose, onSubmit }) {
+function CreateProjectModal({ isOpen, onClose, onSubmit }) {
+  const [step, setStep] = useState(1); // 1: form, 2: AI service generation
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -56,12 +59,14 @@ export default function CreateProjectModal({ isOpen, onClose, onSubmit }) {
   const [selectedTemplates, setSelectedTemplates] = useState([]);
   const [projectTemplates, setProjectTemplates] = useState([]);
   const [selectedProjectTemplate, setSelectedProjectTemplate] = useState(null);
-  const [isGeneratingFromTemplate, setIsGeneratingFromTemplate] = useState(false);
   const [enableAIOnboarding, setEnableAIOnboarding] = useState(true);
+  const [aiGeneratedServices, setAiGeneratedServices] = useState([]);
 
   useEffect(() => {
     if (isOpen) {
       loadTopData();
+      setStep(1);
+      setAiGeneratedServices([]);
     }
   }, [isOpen]);
 
@@ -230,7 +235,6 @@ export default function CreateProjectModal({ isOpen, onClose, onSubmit }) {
   };
 
   const generateFromTemplate = async (template) => {
-    setIsGeneratingFromTemplate(true);
     setSelectedProjectTemplate(template);
 
     try {
@@ -258,11 +262,31 @@ export default function CreateProjectModal({ isOpen, onClose, onSubmit }) {
     } catch (error) {
       console.error("Error generating from template:", error);
     }
-    setIsGeneratingFromTemplate(false);
   };
 
-  const handleSubmit = async (e) => {
+  const handleContinueToAIGeneration = () => {
+    if (!formData.name || !formData.description || !formData.category) {
+      alert("Please fill in required fields (name, description, category)");
+      return;
+    }
+    setStep(2);
+  };
+
+  const handleAIServicesComplete = (services) => {
+    setAiGeneratedServices(services);
+    handleFinalSubmit(services);
+  };
+
+  const handleAIServicesSkip = () => {
+    handleFinalSubmit([]);
+  };
+
+  const handleSubmit = (e) => {
     e.preventDefault();
+    handleContinueToAIGeneration();
+  };
+
+  const handleFinalSubmit = async (aiServices) => {
     setIsSubmitting(true);
     
     const selectedCategory = categories.find(c => c.value === formData.category);
@@ -274,7 +298,8 @@ export default function CreateProjectModal({ isOpen, onClose, onSubmit }) {
         selectedTemplates: selectedTemplates,
         projectTemplateId: selectedProjectTemplate?.id,
         templateConfig: selectedProjectTemplate,
-        enableAIOnboarding
+        enableAIOnboarding,
+        aiGeneratedServices: aiServices
       });
       
       // Reset form
@@ -292,6 +317,9 @@ export default function CreateProjectModal({ isOpen, onClose, onSubmit }) {
       setSelectedTemplates([]);
       setSuggestedServices([]);
       setSelectedProjectTemplate(null);
+      setAiGeneratedServices([]);
+      setStep(1);
+      onClose();
     } catch (error) {
       console.error("Error creating project:", error);
     }
@@ -310,15 +338,18 @@ export default function CreateProjectModal({ isOpen, onClose, onSubmit }) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent flex items-center gap-2">
             <Sparkles className="w-6 h-6 text-purple-600" />
-            Create New Project with AI Assistance
+            {step === 1 ? "Create New Project" : "AI Service Generation"}
           </DialogTitle>
         </DialogHeader>
 
-        <motion.form 
+        <AnimatePresence mode="wait">
+          {step === 1 ? (
+            <motion.form
+              key="step1" 
           onSubmit={handleSubmit} 
           className="space-y-6 mt-6"
           initial={{ opacity: 0, y: 20 }}
@@ -674,20 +705,42 @@ export default function CreateProjectModal({ isOpen, onClose, onSubmit }) {
               type="button"
               variant="outline"
               onClick={onClose}
-              disabled={isSubmitting}
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={isSubmitting}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+              className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white"
             >
-              {isSubmitting ? "Creating..." : `Create Project${selectedTemplates.length > 0 ? ` + ${selectedTemplates.length} Services` : ''}`}
+              Continue to AI Generation
+              <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </div>
         </motion.form>
+          ) : (
+            <motion.div
+              key="step2"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+            >
+              <AIServiceGenerator
+                projectData={formData}
+                onComplete={handleAIServicesComplete}
+                onSkip={handleAIServicesSkip}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </DialogContent>
     </Dialog>
   );
 }
+
+CreateProjectModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onSubmit: PropTypes.func.isRequired
+};
+
+export default CreateProjectModal;
