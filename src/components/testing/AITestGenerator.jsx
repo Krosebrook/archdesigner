@@ -20,6 +20,7 @@ import {
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import PropTypes from "prop-types";
+import { saveAIInteraction } from "../ai-context/useAIContext";
 
 const testFrameworks = [
   { value: "jest", label: "Jest", icon: "🃏" },
@@ -189,6 +190,17 @@ Use ${selectedFramework} syntax and best practices. Make tests maintainable and 
             }
           }
         }
+      });
+
+      // Save to AI context memory
+      await saveAIInteraction(project.id, {
+        type: "test_generation",
+        prompt: `Generated tests for ${selectedService === "all" ? "all services" : "selected service"}`,
+        response: JSON.stringify(result),
+        serviceIds: selectedService === "all" ? services.map(s => s.id) : [selectedService],
+        technologies: [...new Set(serviceDetails.flatMap(s => s.technologies))],
+        tags: ["testing", ...selectedTypes],
+        confidence: 0.9
       });
 
       setGeneratedTests(result);

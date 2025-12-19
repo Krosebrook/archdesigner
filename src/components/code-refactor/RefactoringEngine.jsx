@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { saveAIInteraction, getRelevantContext } from "../ai-context/useAIContext";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -113,6 +114,18 @@ Return the complete refactored file content and a summary of changes.`;
         issues: selectedIssueData,
         recommendations: results.map(r => r.changes_summary),
         status: "applied"
+      });
+
+      // Save AI interaction to context memory
+      await saveAIInteraction(project.id, {
+        type: "refactoring",
+        prompt: `Applied ${selectedIssues.length} refactorings to ${serviceName}`,
+        response: JSON.stringify(results),
+        serviceIds: [selectedServiceId],
+        technologies: targetService?.technologies || [],
+        tags: ["refactoring", "code-quality"],
+        confidence: 0.85,
+        relatedEntities: { service_id: selectedServiceId }
       });
 
       // Trigger documentation sync

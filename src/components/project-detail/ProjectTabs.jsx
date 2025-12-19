@@ -45,6 +45,8 @@ import IntegrationHub from "../integrations/IntegrationHub";
 import APIIntegrationHub from "../api/APIIntegrationHub";
 import AdvancedAnalyticsDashboard from "../analytics/AdvancedAnalyticsDashboard";
 import AIDeploymentAutomation from "../deployment/AIDeploymentAutomation";
+import AIContextManager from "../ai-context/AIContextManager";
+import ProjectKnowledgeGraph from "../ai-context/ProjectKnowledgeGraph";
 
 export const tabConfig = [
   { id: "assistant", label: "AI Assistant", icon: Bot, component: AIProjectAssistant, props: ["project", "services"] },
