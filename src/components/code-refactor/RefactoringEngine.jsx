@@ -115,6 +115,11 @@ Return the complete refactored file content and a summary of changes.`;
         status: "applied"
       });
 
+      // Trigger documentation sync
+      window.dispatchEvent(new CustomEvent('code-refactored', { 
+        detail: { projectId: project.id, changes: results }
+      }));
+
       setRefactoringResults(results);
       toast.success(`Successfully applied ${results.length} refactorings`);
     } catch (error) {

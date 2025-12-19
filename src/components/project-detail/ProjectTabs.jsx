@@ -39,6 +39,7 @@ import CodeScaffoldingHub from "../code-scaffold/CodeScaffoldingHub";
 import CodeRefactoringHub from "../code-refactor/CodeRefactoringHub";
 import CICDIntelligenceHub from "../cicd/CICDIntelligenceHub";
 import DocumentationIntelligenceHub from "../documentation/DocumentationIntelligenceHub";
+import EnhancedDocGenerator from "../documentation/EnhancedDocGenerator";
 import SecurityIntelligenceHub from "../security/SecurityIntelligenceHub";
 import IntegrationHub from "../integrations/IntegrationHub";
 import APIIntegrationHub from "../api/APIIntegrationHub";
@@ -61,6 +62,7 @@ export const tabConfig = [
   { id: "dependencies", label: "Graph", icon: Network, component: DependencyVisualizer, props: ["project", "services"] },
   { id: "refactor", label: "Refactor", icon: RefreshCw, component: CodeRefactoringHub, props: ["project", "services"] },
   { id: "documentation", label: "Docs", icon: FileText, component: AIDocGenerator, props: ["project", "services"] },
+  { id: "docs-enhanced", label: "Smart Docs", icon: BookOpen, component: EnhancedDocGenerator, props: ["project", "services"] },
   { id: "docs-intelligence", label: "Docs AI", icon: BookOpen, component: DocumentationIntelligenceHub, props: ["project", "services"] },
   { id: "code-review", label: "Review", icon: Code2, component: AICodeReview, props: ["project", "services"] },
   { id: "api-gen", label: "API", icon: FileCode2, component: APIGenerator, props: ["project", "services"] },
