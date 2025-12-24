@@ -92,9 +92,12 @@ function RecentProjects({ projects = [], services = [], isLoading = false }) {
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-1">{project.name}</h3>
                     <p className="text-sm text-gray-500 line-clamp-1">{project.description}</p>
-                    <div className="flex items-center gap-3 mt-2">
+                    <div className="flex items-center gap-2 mt-2 flex-wrap">
                       <Badge className={categoryColors[project.category] || "bg-gray-100 text-gray-800"}>
                         {project.category}
+                      </Badge>
+                      <Badge className={`${statusColors[project.status]} border`}>
+                        {project.status}
                       </Badge>
                       <div className="flex items-center gap-1 text-xs text-gray-500">
                         <Server className="w-3 h-3" />
@@ -103,9 +106,6 @@ function RecentProjects({ projects = [], services = [], isLoading = false }) {
                     </div>
                   </div>
                 </div>
-                <Badge className={`${statusColors[project.status]} border`}>
-                  {project.status}
-                </Badge>
               </motion.div>
             ))}
           </div>
