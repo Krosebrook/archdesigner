@@ -4,7 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Code2, Sparkles, Loader2, FileCode } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Code2, Sparkles, Loader2, FileCode, Wand2, TestTube } from "lucide-react";
 import { toast } from "sonner";
 import PropTypes from "prop-types";
 
@@ -12,6 +14,8 @@ export default function ServicesStep({ data, onComplete, onSkipToReview }) {
   const [services, setServices] = useState(data.services || []);
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedServices, setSelectedServices] = useState([]);
+  const [customFeature, setCustomFeature] = useState("");
+  const [isGeneratingFeature, setIsGeneratingFeature] = useState(false);
 
   useEffect(() => {
     if (services.length === 0 && data.projectInfo?.name) {
@@ -83,8 +87,10 @@ Use latest stable versions and industry-standard patterns. Make it production-re
                   },
                   database_schema: { type: "string" },
                   boilerplate_code: { type: "string" },
+                  test_code: { type: "string" },
                   dockerfile: { type: "string" },
-                  dependencies: { type: "array", items: { type: "string" } }
+                  dependencies: { type: "array", items: { type: "string" } },
+                  environment_variables: { type: "array", items: { type: "string" } }
                 }
               }
             }
@@ -107,6 +113,137 @@ Use latest stable versions and industry-standard patterns. Make it production-re
     setSelectedServices(prev =>
       prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
     );
+  };
+
+  const generateCustomFeature = async () => {
+    if (!customFeature.trim()) {
+      toast.error("Please describe the feature you want to build");
+      return;
+    }
+
+    setIsGeneratingFeature(true);
+    try {
+      const prompt = `You are a senior full-stack engineer with expertise in ${data.architecture?.technologies?.join(', ')}. Generate a COMPLETE, PRODUCTION-READY implementation for this feature:
+
+FEATURE REQUEST: ${customFeature}
+
+PROJECT CONTEXT:
+- Architecture: ${data.architecture?.pattern}
+- Tech Stack: ${data.architecture?.technologies?.join(', ')}
+- Existing Services: ${services.map(s => s.name).join(', ')}
+
+Generate a FULLY FUNCTIONAL microservice/module with:
+
+1. SERVICE DETAILS:
+   - Descriptive name and clear purpose
+   - Category (api, database, frontend, backend, auth, analytics, messaging, storage, payment, notification)
+   - Modern tech stack selection (latest stable versions)
+
+2. COMPLETE WORKING CODE:
+   - Full implementation with error handling
+   - Input validation and sanitization
+   - Security best practices (rate limiting, auth checks, SQL injection prevention)
+   - Logging and monitoring hooks
+   - Database models/schemas with migrations
+   - Business logic layer
+   - API controllers/handlers
+   - Use modern patterns: async/await, dependency injection, middleware
+
+3. COMPREHENSIVE TESTS:
+   - Unit tests (80%+ coverage)
+   - Integration tests
+   - E2E tests for critical paths
+   - Mock data and fixtures
+   - Test utilities and helpers
+
+4. API SPECIFICATION:
+   - RESTful endpoints with proper HTTP methods
+   - Request/response schemas with validation
+   - Authentication requirements
+   - Rate limiting rules
+   - Error response formats
+   - Example curl commands
+
+5. DATABASE SCHEMA:
+   - Table definitions with indexes
+   - Relationships and foreign keys
+   - Migration scripts (up/down)
+   - Seed data for development
+
+6. DOCKER & DEPLOYMENT:
+   - Multi-stage Dockerfile with optimization
+   - Docker Compose service definition
+   - Health check endpoints
+   - Environment variables list
+   - Resource limits
+
+7. INTEGRATION:
+   - How it connects to existing services
+   - Message queue patterns if needed
+   - API gateway configuration
+   - Service discovery setup
+
+8. DOCUMENTATION:
+   - Inline code comments
+   - API documentation
+   - Setup instructions
+   - Troubleshooting guide
+
+Make it PRODUCTION-READY - someone should be able to deploy this immediately.`;
+
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt,
+        add_context_from_internet: true,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            name: { type: "string" },
+            description: { type: "string" },
+            category: { type: "string" },
+            technologies: { type: "array", items: { type: "string" } },
+            boilerplate_code: { type: "string" },
+            test_code: { type: "string" },
+            endpoints: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  method: { type: "string" },
+                  path: { type: "string" },
+                  description: { type: "string" },
+                  request_body: { type: "string" },
+                  response_example: { type: "string" }
+                }
+              }
+            },
+            database_schema: { type: "string" },
+            dockerfile: { type: "string" },
+            docker_compose: { type: "string" },
+            dependencies: { type: "array", items: { type: "string" } },
+            environment_variables: { type: "array", items: { type: "string" } },
+            integration_notes: { type: "string" },
+            setup_instructions: { type: "string" }
+          }
+        }
+      });
+
+      const newService = {
+        ...result,
+        custom: true,
+        feature_description: customFeature
+      };
+
+      setServices(prev => [...prev, newService]);
+      setSelectedServices(prev => [...prev, services.length]);
+      setCustomFeature("");
+      
+      toast.success(`Generated ${result.name} with full implementation!`);
+    } catch (error) {
+      console.error("Feature generation failed:", error);
+      toast.error("Failed to generate feature");
+    } finally {
+      setIsGeneratingFeature(false);
+    }
   };
 
   if (isGenerating) {
@@ -186,6 +323,15 @@ Use latest stable versions and industry-standard patterns. Make it production-re
                 </div>
               </div>
 
+              {service.feature_description && (
+                <div className="p-2 bg-purple-50 rounded border border-purple-200">
+                  <div className="text-xs font-semibold text-purple-900 mb-1">
+                    🎯 Custom Feature
+                  </div>
+                  <div className="text-xs text-purple-700">{service.feature_description}</div>
+                </div>
+              )}
+
               {service.endpoints?.length > 0 && (
                 <div>
                   <div className="text-xs font-semibold text-gray-700 mb-2">API Endpoints</div>
@@ -193,6 +339,9 @@ Use latest stable versions and industry-standard patterns. Make it production-re
                     {service.endpoints.slice(0, 3).map((ep, i) => (
                       <div key={i} className="text-xs font-mono bg-gray-100 px-2 py-1 rounded">
                         <span className="text-blue-600 font-bold">{ep.method}</span> {ep.path}
+                        {ep.description && (
+                          <div className="text-gray-600 mt-0.5">{ep.description}</div>
+                        )}
                       </div>
                     ))}
                     {service.endpoints.length > 3 && (
@@ -207,12 +356,35 @@ Use latest stable versions and industry-standard patterns. Make it production-re
               <details className="text-xs">
                 <summary className="cursor-pointer text-blue-600 hover:text-blue-700 font-semibold mb-2">
                   <FileCode className="w-3 h-3 inline mr-1" />
-                  View Boilerplate Code
+                  View Implementation Code
                 </summary>
-                <pre className="bg-gray-900 text-gray-100 p-3 rounded overflow-x-auto text-xs">
+                <pre className="bg-gray-900 text-gray-100 p-3 rounded overflow-x-auto text-xs max-h-80">
                   {service.boilerplate_code}
                 </pre>
               </details>
+
+              {service.test_code && (
+                <details className="text-xs">
+                  <summary className="cursor-pointer text-green-600 hover:text-green-700 font-semibold mb-2">
+                    <TestTube className="w-3 h-3 inline mr-1" />
+                    View Test Suite
+                  </summary>
+                  <pre className="bg-gray-900 text-gray-100 p-3 rounded overflow-x-auto text-xs max-h-80">
+                    {service.test_code}
+                  </pre>
+                </details>
+              )}
+
+              {service.environment_variables?.length > 0 && (
+                <div>
+                  <div className="text-xs font-semibold text-gray-700 mb-1">Environment Variables</div>
+                  <div className="text-xs font-mono text-gray-600 space-y-0.5">
+                    {service.environment_variables.map((env, i) => (
+                      <div key={i}>• {env}</div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {service.dependencies?.length > 0 && (
                 <div>
@@ -227,11 +399,54 @@ Use latest stable versions and industry-standard patterns. Make it production-re
         ))}
       </div>
 
-      <div className="flex gap-2">
+      <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200">
+        <CardHeader>
+          <CardTitle className="text-lg text-purple-900 flex items-center gap-2">
+            <Wand2 className="w-5 h-5" />
+            Add Custom Feature
+          </CardTitle>
+          <CardDescription className="text-purple-700">
+            Describe any feature in natural language and AI will generate complete, production-ready code
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Textarea
+              placeholder="Example: 'Implement user authentication with JWT and refresh tokens'&#10;Example: 'Add shopping cart with Stripe payment integration'&#10;Example: 'Create real-time chat with WebSocket and message persistence'"
+              value={customFeature}
+              onChange={(e) => setCustomFeature(e.target.value)}
+              rows={3}
+              className="border-purple-200 focus:border-purple-400"
+            />
+            <div className="text-xs text-purple-600">
+              💡 Be specific about technologies, security requirements, and integrations
+            </div>
+          </div>
+          
+          <Button
+            onClick={generateCustomFeature}
+            disabled={isGeneratingFeature || !customFeature.trim()}
+            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+          >
+            {isGeneratingFeature ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Generating Full Implementation...
+              </>
+            ) : (
+              <>
+                <Wand2 className="w-4 h-4 mr-2" />
+                Generate Feature with Tests
+              </>
+            )}
+          </Button>
+        </CardContent>
+      </Card>
+
+      <div className="grid md:grid-cols-2 gap-3">
         <Button
           onClick={generateServices}
           variant="outline"
-          className="flex-1"
         >
           <Sparkles className="w-4 h-4 mr-2" />
           Regenerate Services
@@ -239,7 +454,6 @@ Use latest stable versions and industry-standard patterns. Make it production-re
         <Button
           onClick={onSkipToReview}
           variant="outline"
-          className="flex-1"
         >
           Skip to Review
         </Button>
