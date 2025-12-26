@@ -31,7 +31,7 @@ export default function ArchitectureStep({ data, onComplete }) {
 
     setIsAnalyzing(true);
     try {
-      const prompt = `You are a senior software architect. Analyze this project and suggest the best architectural pattern:
+      const prompt = `You are a senior software architect with access to current industry trends. Analyze this project and suggest the best architectural pattern:
 
 PROJECT: ${data.projectInfo.name}
 DESCRIPTION: ${data.projectInfo.description}
@@ -41,14 +41,20 @@ GOALS: ${data.projectInfo.goals}
 Analyze and provide:
 1. Recommended architecture pattern (microservices, monolithic, event-driven, layered, or serverless)
 2. Reasoning for this recommendation
-3. Suggested core technologies and frameworks
+3. Suggested CURRENT, PRODUCTION-READY technologies and frameworks from 2024-2025:
+   - Frontend: React 18+, Next.js 14+, Vue 3+, Angular 17+, Svelte 5+
+   - Backend: Node.js 20+, Express 5, NestJS 10+, FastAPI, Django 5+, Spring Boot 3+, Go 1.22+
+   - Databases: PostgreSQL 16+, MongoDB 7+, Redis 7+, MySQL 8+
+   - Cloud: AWS, Google Cloud, Azure, Vercel, Railway
+   - DevOps: Docker, Kubernetes, Terraform, GitHub Actions
 4. Scalability considerations
 5. Team size and complexity fit
 
-Return structured recommendations.`;
+Use latest stable versions and modern best practices. Return structured recommendations.`;
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt,
+        add_context_from_internet: true,
         response_json_schema: {
           type: "object",
           properties: {

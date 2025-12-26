@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { BookOpen, Loader2, FileText } from "lucide-react";
+import { BookOpen, Loader2, FileText, Cloud } from "lucide-react";
 import { toast } from "sonner";
 import PropTypes from "prop-types";
 
@@ -20,6 +20,7 @@ export default function DocumentationStep({ data, onComplete }) {
   const [docs, setDocs] = useState(data.documentation || []);
   const [selectedDocs, setSelectedDocs] = useState(DOC_TEMPLATES.map((_, i) => i));
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSavingToDrive, setIsSavingToDrive] = useState(false);
 
   useEffect(() => {
     if (docs.length === 0) {
@@ -35,7 +36,7 @@ export default function DocumentationStep({ data, onComplete }) {
   const generateDocumentation = async () => {
     setIsGenerating(true);
     try {
-      const prompt = `You are a technical writer. Generate comprehensive documentation for this project:
+      const prompt = `You are an expert technical writer with access to current documentation best practices. Generate comprehensive, modern documentation for this project:
 
 PROJECT: ${data.projectInfo.name}
 DESCRIPTION: ${data.projectInfo.description}
@@ -43,19 +44,53 @@ ARCHITECTURE: ${data.architecture?.pattern}
 SERVICES: ${data.services?.map(s => s.name).join(', ')}
 TECHNOLOGIES: ${data.architecture?.technologies?.join(', ')}
 
-Generate the following documentation in Markdown format:
+Generate MODERN documentation (2024-2025 standards) in Markdown format:
 
-1. **README.md**: Project overview, quick start, features, tech stack
-2. **Architecture Overview**: System design, service interactions, data flow
-3. **Getting Started Guide**: Setup instructions, prerequisites, local development
-4. **API Documentation**: Endpoint reference, authentication, examples
-5. **Deployment Guide**: Production deployment, environment configuration, scaling
-6. **Contributing Guidelines**: Code style, PR process, testing requirements
+1. **README.md**: 
+   - Project badges (build status, version, license)
+   - Quick start with code examples
+   - Feature highlights with screenshots placeholders
+   - Tech stack with version numbers
+   - Links to detailed docs
 
-Make each document detailed, professional, and easy to follow.`;
+2. **Architecture Overview**: 
+   - C4 model diagrams (Context, Container, Component)
+   - Mermaid diagrams for service interactions
+   - Data flow with sequence diagrams
+   - Technology decision records (ADRs)
+
+3. **Getting Started Guide**: 
+   - Prerequisites with version requirements
+   - Step-by-step setup with troubleshooting
+   - Docker Compose quick start
+   - IDE/editor configuration recommendations
+
+4. **API Documentation**: 
+   - OpenAPI/Swagger specs
+   - Authentication flows (OAuth2, JWT)
+   - Request/response examples with curl
+   - Rate limiting and error codes
+   - Postman collection link placeholder
+
+5. **Deployment Guide**: 
+   - Infrastructure as Code (Terraform/Pulumi)
+   - Container orchestration (Kubernetes manifests)
+   - Environment variables reference
+   - Monitoring and logging setup
+   - Backup and disaster recovery
+
+6. **Contributing Guidelines**: 
+   - Git workflow (conventional commits)
+   - Code quality standards (ESLint, Prettier configs)
+   - Testing pyramid (unit, integration, e2e)
+   - PR template and review checklist
+   - Semantic versioning strategy
+
+Make it production-ready with current industry standards.`;
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt,
+        add_context_from_internet: true,
         response_json_schema: {
           type: "object",
           properties: {
@@ -175,13 +210,51 @@ Make each document detailed, professional, and easy to follow.`;
         ))}
       </div>
 
-      <Button
-        onClick={generateDocumentation}
-        variant="outline"
-        className="w-full"
-      >
-        Regenerate Documentation
-      </Button>
+      <div className="grid md:grid-cols-2 gap-3">
+        <Button
+          onClick={generateDocumentation}
+          variant="outline"
+        >
+          Regenerate Documentation
+        </Button>
+        <Button
+          onClick={async () => {
+            setIsSavingToDrive(true);
+            try {
+              // Generate combined markdown file
+              const combinedDocs = docs
+                .filter((_, i) => selectedDocs.includes(i))
+                .map(doc => `# ${doc.title}\n\n${doc.content}\n\n---\n\n`)
+                .join('\n');
+
+              const blob = new Blob([combinedDocs], { type: 'text/markdown' });
+              const file = new File([blob], `${data.projectInfo?.name || 'project'}-documentation.md`, { type: 'text/markdown' });
+              
+              // Upload to base44 storage
+              const { file_url } = await base44.integrations.Core.UploadFile({ file });
+              
+              toast.success("Documentation ready for download!");
+              
+              // Download locally
+              const link = document.createElement('a');
+              link.href = file_url;
+              link.download = `${data.projectInfo?.name || 'project'}-docs.md`;
+              link.click();
+            } catch (error) {
+              console.error("Save failed:", error);
+              toast.error("Failed to save documentation");
+            } finally {
+              setIsSavingToDrive(false);
+            }
+          }}
+          disabled={isSavingToDrive || selectedDocs.length === 0}
+          variant="outline"
+          className="border-blue-300 hover:bg-blue-50"
+        >
+          <Cloud className="w-4 h-4 mr-2" />
+          {isSavingToDrive ? "Saving..." : "Download Docs"}
+        </Button>
+      </div>
     </div>
   );
 }

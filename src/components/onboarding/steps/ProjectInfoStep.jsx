@@ -45,21 +45,32 @@ export default function ProjectInfoStep({ data, onComplete }) {
     try {
       const categoryInfo = CATEGORIES.find(c => c.id === formData.category);
       
-      const prompt = `You are an expert software architect. Based on the following project details, generate a comprehensive project setup:
+      const prompt = `You are an expert software architect with knowledge of current market trends. Based on the following project details, generate a comprehensive project setup:
 
 PROJECT NAME: ${formData.name}
 CATEGORY: ${categoryInfo?.label || "Not specified"}
 CURRENT DESCRIPTION: ${formData.description || "None"}
 
-Generate:
-1. A compelling 2-3 sentence project description that explains the purpose and value proposition
-2. Key project goals (3-5 bullet points)
-3. Suggested emoji icon that represents this project
+Generate using current industry insights:
+1. A compelling 2-3 sentence project description that explains:
+   - The problem it solves
+   - Target audience/users
+   - Unique value proposition
+   - Technical approach aligned with 2024-2025 best practices
 
-Make it professional, specific, and actionable.`;
+2. Key project goals (3-5 SMART goals):
+   - Specific, measurable, achievable objectives
+   - Technical milestones
+   - User experience targets
+   - Business/impact metrics
+
+3. Suggested emoji icon that represents this project visually
+
+Make it professional, specific, actionable, and aligned with current tech trends.`;
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt,
+        add_context_from_internet: true,
         response_json_schema: {
           type: "object",
           properties: {

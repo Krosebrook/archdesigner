@@ -39,7 +39,7 @@ export default function CICDStep({ data, onComplete }) {
     try {
       const selectedServices = data.services || [];
       
-      const prompt = `You are a DevOps expert. Generate a complete CI/CD pipeline configuration for this project:
+      const prompt = `You are a DevOps expert with knowledge of latest CI/CD trends. Generate a complete CI/CD pipeline configuration for this project:
 
 PROJECT: ${data.projectInfo.name}
 ARCHITECTURE: ${data.architecture?.pattern}
@@ -47,19 +47,34 @@ SERVICES: ${selectedServices.map(s => s.name).join(', ')}
 TECHNOLOGIES: ${data.architecture?.technologies?.join(', ')}
 PLATFORM: ${platform}
 
-Generate:
-1. Complete pipeline configuration file (YAML/Groovy)
-2. Build stages: linting, testing, security scanning, build, deploy
-3. Docker configuration for each service
-4. Docker Compose for local development
-5. Deployment steps for staging and production
-6. Environment variables and secrets management
-7. Automated rollback strategies
+Generate MODERN CI/CD pipeline (2024-2025 standards):
+1. Complete pipeline configuration with:
+   - Caching strategies (npm/pip/go modules)
+   - Parallel job execution
+   - Matrix builds for multiple environments
+   - Dependency vulnerability scanning (Snyk, Dependabot)
+   - SAST tools (SonarQube, CodeQL)
+2. Build stages: linting (ESLint, Prettier), testing (Jest, Pytest), security scanning, build, deploy
+3. Multi-stage Dockerfiles with:
+   - Non-root user
+   - Layer caching optimization
+   - Security scanning with Trivy
+4. Docker Compose v3.8+ for local development with:
+   - Health checks
+   - Resource limits
+   - Volume management
+5. Deployment strategies:
+   - Blue-green or canary deployments
+   - Automated rollback on health check failure
+   - Zero-downtime deployments
+6. Secrets management with HashiCorp Vault or cloud provider
+7. Monitoring integration (Prometheus, Grafana, Datadog)
 
-Make it production-ready with best practices.`;
+Use current best practices and industry standards.`;
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt,
+        add_context_from_internet: true,
         response_json_schema: {
           type: "object",
           properties: {

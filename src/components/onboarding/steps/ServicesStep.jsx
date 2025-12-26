@@ -29,7 +29,7 @@ export default function ServicesStep({ data, onComplete, onSkipToReview }) {
   const generateServices = async () => {
     setIsGenerating(true);
     try {
-      const prompt = `You are an expert microservices architect. Based on this project, design the optimal microservices architecture:
+      const prompt = `You are an expert microservices architect with access to latest development best practices. Based on this project, design the optimal microservices architecture:
 
 PROJECT: ${data.projectInfo.name}
 DESCRIPTION: ${data.projectInfo.description}
@@ -38,20 +38,26 @@ ARCHITECTURE: ${data.architecture?.pattern}
 TECHNOLOGIES: ${data.architecture?.technologies?.join(', ')}
 GOALS: ${data.projectInfo.goals}
 
-Design 4-8 core microservices with:
+Design 4-8 core microservices with MODERN STACK (2024-2025):
 1. Service name and purpose
 2. Category (api, database, frontend, backend, auth, analytics, messaging, storage)
-3. Recommended technologies
-4. Key API endpoints
-5. Database schema (if applicable)
-6. Boilerplate code structure
-7. Dockerfile configuration
-8. Dependencies on other services
+3. Recommended technologies using:
+   - Languages: TypeScript, Python 3.12+, Go 1.22+, Rust, Java 21+
+   - Frameworks: Express, NestJS, FastAPI, Django, Spring Boot, Fiber
+   - Databases: PostgreSQL, MongoDB, Redis, Prisma ORM, Drizzle
+   - Auth: Clerk, Auth0, Supabase Auth, Firebase Auth
+   - APIs: REST, GraphQL (Apollo), gRPC, tRPC
+4. Key API endpoints with OpenAPI specs
+5. Database schema with migrations
+6. Production-ready boilerplate code with error handling
+7. Multi-stage Dockerfile with security best practices
+8. Service dependencies and communication patterns
 
-Make it production-ready and follow best practices for the chosen architecture pattern.`;
+Use latest stable versions and industry-standard patterns. Make it production-ready.`;
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt,
+        add_context_from_internet: true,
         response_json_schema: {
           type: "object",
           properties: {
