@@ -90,6 +90,8 @@ function CreateProjectModal({ isOpen, onClose, onSubmit }) {
       setTopTemplates(sortedTemplates);
 
       // Load project templates
+      const { seedProjectTemplates } = await import('../onboarding/TemplateSeeder');
+      await seedProjectTemplates();
       const projTemplates = await base44.entities.ProjectTemplate.filter({ is_public: true });
       setProjectTemplates(projTemplates.sort((a, b) => (b.usage_count || 0) - (a.usage_count || 0)));
     } catch (error) {

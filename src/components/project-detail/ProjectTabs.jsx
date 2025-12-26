@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 
 import VisualEditor from "./VisualEditor";
+import EnhancedVisualEditor from "../visual-editor/EnhancedVisualEditor";
 import ServicesList from "./ServicesList";
 import AIValidator from "./AIValidator";
 import DependencyVisualizer from "./DependencyVisualizer";
@@ -55,7 +56,7 @@ export const tabConfig = [
   { id: "knowledge-graph", label: "Knowledge Graph", icon: Network, component: ProjectKnowledgeGraph, props: ["project", "services"] },
   { id: "knowledge", label: "Knowledge Base", icon: BookOpen, component: KnowledgeBaseHub, props: ["project", "services"] },
   { id: "health", label: "Health", icon: Activity, component: ProjectHealthDashboard, props: ["project", "services"] },
-  { id: "visual", label: "Visual", icon: Network, component: VisualEditor, props: ["services", "onUpdateService", "onDeleteService"] },
+  { id: "visual", label: "Visual", icon: Network, component: EnhancedVisualEditor, props: ["project", "services", "onUpdateService", "onDeleteService"] },
   { id: "list", label: "Services", icon: List, component: ServicesList, props: ["services", "onUpdateService", "onDeleteService"] },
   { id: "tasks", label: "Tasks", icon: CheckSquare, component: TaskPrioritization, props: ["project", "services"] },
   { id: "discover", label: "Discover", icon: Compass, component: ServiceDiscovery, props: ["project", "services"] },
