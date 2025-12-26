@@ -1,7 +1,7 @@
 import { 
   Network, List, Sparkles, FileText, Code2, FileCode2, 
   DollarSign, GitBranch, Cpu, Code, Users, Settings, Compass, 
-  Brain, BarChart3, Eye, Rocket, Wand2, CheckSquare, Zap, Activity, Bot, Flag, BookOpen, RefreshCw, Shield
+  Brain, BarChart3, Eye, Rocket, Wand2, CheckSquare, Zap, Activity, Bot, Flag, BookOpen, RefreshCw, Shield, GitPullRequest
 } from "lucide-react";
 
 import VisualEditor from "./VisualEditor";
@@ -47,6 +47,7 @@ import AdvancedAnalyticsDashboard from "../analytics/AdvancedAnalyticsDashboard"
 import AIDeploymentAutomation from "../deployment/AIDeploymentAutomation";
 import AIContextManager from "../ai-context/AIContextManager";
 import ProjectKnowledgeGraph from "../ai-context/ProjectKnowledgeGraph";
+import AICodeReviewer from "../code-review/AICodeReviewer";
 
 export const tabConfig = [
   { id: "assistant", label: "AI Assistant", icon: Bot, component: AIProjectAssistant, props: ["project", "services"] },
@@ -69,6 +70,7 @@ export const tabConfig = [
   { id: "docs-enhanced", label: "Smart Docs", icon: BookOpen, component: EnhancedDocGenerator, props: ["project", "services"] },
   { id: "docs-intelligence", label: "Docs AI", icon: BookOpen, component: DocumentationIntelligenceHub, props: ["project", "services"] },
   { id: "code-review", label: "Review", icon: Code2, component: AICodeReview, props: ["project", "services"] },
+  { id: "ai-review", label: "AI Review", icon: Shield, component: AICodeReviewer, props: ["project", "services"] },
   { id: "api-gen", label: "API", icon: FileCode2, component: APIGenerator, props: ["project", "services"] },
   { id: "cost", label: "Cost", icon: DollarSign, component: CostOptimizer, props: ["project", "services"] },
   { id: "cicd", label: "CI/CD", icon: GitBranch, component: CICDGenerator, props: ["project", "services"] },
