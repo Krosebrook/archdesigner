@@ -957,7 +957,7 @@ const OFFICIAL_AGENTS = [
     tags: ["seo", "performance", "web-vitals", "optimization"]
   },
 
-  // Orchestration & Control Agents (5)
+  // Orchestration & Control Agents (8)
   {
     name: "Workflow Orchestrator",
     slug: "workflow-orchestrator",
@@ -975,6 +975,60 @@ const OFFICIAL_AGENTS = [
     rating: 4.9,
     installs_count: 3456,
     tags: ["orchestration", "workflow", "coordination", "automation"]
+  },
+  {
+    name: "Predictive Analytics Agent",
+    slug: "predictive-analytics",
+    description: "Analyzes historical workflow data, predicts potential failures, and identifies optimization opportunities before they occur",
+    category: "orchestration",
+    icon: "🔮",
+    color: "#8b5cf6",
+    specialization: "Predictive Intelligence",
+    capabilities: ["Failure prediction", "Pattern recognition", "Trend analysis", "Anomaly detection", "Proactive alerts"],
+    system_prompt: "You are a predictive analytics expert analyzing historical patterns to forecast issues and opportunities...",
+    configuration_schema: {},
+    default_config: {},
+    is_public: true,
+    is_official: true,
+    rating: 4.9,
+    installs_count: 3876,
+    tags: ["analytics", "prediction", "ml", "insights"]
+  },
+  {
+    name: "Cost Intelligence Agent",
+    slug: "cost-intelligence",
+    description: "Tracks agent execution costs, identifies expensive patterns, and suggests cost-reduction strategies based on usage data",
+    category: "orchestration",
+    icon: "💡",
+    color: "#10b981",
+    specialization: "Cost Optimization Intelligence",
+    capabilities: ["Cost tracking", "Usage analysis", "Budget alerts", "Optimization suggestions", "ROI calculation"],
+    system_prompt: "You are a cost intelligence expert analyzing agent usage patterns to optimize spending...",
+    configuration_schema: {},
+    default_config: {},
+    is_public: true,
+    is_official: true,
+    rating: 4.8,
+    installs_count: 3234,
+    tags: ["cost", "optimization", "budget", "finops"]
+  },
+  {
+    name: "Performance Predictor",
+    slug: "performance-predictor",
+    description: "Analyzes workflow execution times, predicts slowdowns, and recommends performance improvements based on historical data",
+    category: "orchestration",
+    icon: "⚡",
+    color: "#eab308",
+    specialization: "Performance Intelligence",
+    capabilities: ["Performance forecasting", "Bottleneck prediction", "Latency analysis", "Optimization recommendations", "Capacity planning"],
+    system_prompt: "You are a performance intelligence expert predicting and preventing workflow slowdowns...",
+    configuration_schema: {},
+    default_config: {},
+    is_public: true,
+    is_official: true,
+    rating: 4.9,
+    installs_count: 3543,
+    tags: ["performance", "prediction", "optimization", "monitoring"]
   },
   {
     name: "Agent Performance Monitor",
@@ -1154,8 +1208,8 @@ export default function AgentMarketplacePage() {
               AI Agent Marketplace
             </h1>
             <p className="text-lg text-white/90 max-w-2xl">
-              Discover 55+ specialized AI co-pilots including orchestration agents for workflow coordination. 
-              Chain agents together to create powerful automated workflows with intelligent routing and monitoring.
+              Discover 58+ specialized AI co-pilots including predictive orchestration agents. 
+              Get proactive insights, failure predictions, and cost optimization recommendations before issues occur.
             </p>
             <div className="flex gap-4 mt-6">
               <Badge className="bg-white/20 text-white border-white/30 backdrop-blur">
