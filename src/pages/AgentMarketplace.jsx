@@ -35,7 +35,8 @@ const CATEGORIES = [
   { id: "performance", label: "Performance", icon: Zap },
   { id: "devops", label: "DevOps", icon: GitBranch },
   { id: "testing", label: "Testing", icon: TestTube },
-  { id: "documentation", label: "Documentation", icon: BookOpen }
+  { id: "documentation", label: "Documentation", icon: BookOpen },
+  { id: "specialty", label: "Specialty", icon: Star }
 ];
 
 const OFFICIAL_AGENTS = [
@@ -278,9 +279,13 @@ export default function AgentMarketplacePage() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
+        <TabsList className="grid w-full max-w-2xl grid-cols-3">
           <TabsTrigger value="browse">Browse Agents</TabsTrigger>
           <TabsTrigger value="workflows">Build Workflow</TabsTrigger>
+          <TabsTrigger value="builder">
+            <Sparkles className="w-4 h-4 mr-2" />
+            Agent Builder
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="browse" className="space-y-6">
@@ -364,6 +369,10 @@ export default function AgentMarketplacePage() {
               <p className="text-gray-600">Please create a project first to build workflows</p>
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="builder">
+          <AgentBuilder onAgentCreated={loadMarketplace} />
         </TabsContent>
       </Tabs>
     </div>
