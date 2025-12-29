@@ -23,6 +23,7 @@ import {
 import { toast } from "sonner";
 import PropTypes from "prop-types";
 import WorkflowExecutor from "./WorkflowExecutor";
+import ProactiveInsights from "./ProactiveInsights";
 
 export default function WorkflowBuilder({ project, installedAgents = [] }) {
   const [workflow, setWorkflow] = useState({
@@ -134,7 +135,11 @@ export default function WorkflowBuilder({ project, installedAgents = [] }) {
   }
 
   return (
-    <div className="grid lg:grid-cols-3 gap-6">
+    <div className="space-y-6">
+      {/* Proactive Insights */}
+      <ProactiveInsights projectId={project.id} />
+      
+      <div className="grid lg:grid-cols-3 gap-6">
       {/* Agent Library */}
       <Card className="lg:col-span-1">
         <CardHeader>
@@ -367,6 +372,7 @@ export default function WorkflowBuilder({ project, installedAgents = [] }) {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }
