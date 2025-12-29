@@ -18,7 +18,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import PropTypes from "prop-types";
 
-function AIServiceGenerator({ projectData, onComplete, onSkip }) {
+function AIServiceGenerator({ projectData, industryContext, onComplete, onSkip }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [suggestions, setSuggestions] = useState(null);
   const [selectedServices, setSelectedServices] = useState([]);
@@ -27,25 +27,56 @@ function AIServiceGenerator({ projectData, onComplete, onSkip }) {
   const generateSuggestions = async () => {
     setIsGenerating(true);
     try {
-      const prompt = `You are an expert software architect. Generate comprehensive service architecture suggestions for this project:
+      const industryInfo = industryContext ? `
+INDUSTRY: ${industryContext.industry?.label}
+COMPLIANCE: ${industryContext.industry?.compliance?.join(", ")}
+SECURITY REQUIREMENTS: ${industryContext.template?.security_compliance?.authentication}
+` : "";
+
+      const prompt = `You are an expert software architect. Generate production-ready microservices with complete boilerplate code for this project:
 
 PROJECT NAME: ${projectData.name}
 DESCRIPTION: ${projectData.description}
 CATEGORY: ${projectData.category}
-TECH STACK: Modern microservices architecture
+${industryInfo}
 
-Generate:
-1. 3-5 core microservices that would be needed
-2. For each service:
-   - Service name and purpose
-   - Technology stack recommendation (Node.js/Python/Go/Java)
-   - REST API endpoints with methods, paths, and descriptions
-   - Database schema (tables/collections with fields and types)
-   - Key dependencies and libraries
-   - Boilerplate code structure
-   - Docker configuration snippet
+Generate 3-5 core microservices with:
 
-Consider industry best practices, scalability, and the project category.`;
+1. SERVICE ARCHITECTURE:
+   - Service name, purpose, and technology (Node.js, Python, Go, or Java)
+   - Complete REST API endpoints with:
+     * HTTP methods, paths, descriptions
+     * Request/response JSON schemas
+     * Authentication requirements
+     * Rate limiting suggestions
+
+2. DATABASE SCHEMA:
+   - Database type (PostgreSQL, MongoDB, Redis)
+   - Complete table/collection definitions
+   - Field types, constraints, indexes
+   - Migration scripts
+   - Seed data examples
+
+3. PRODUCTION-READY BOILERPLATE CODE:
+   - Complete server setup with Express/FastAPI/Gin/Spring
+   - Database connection and ORM/ODM configuration
+   - API route handlers with validation
+   - Authentication middleware
+   - Error handling and logging
+   - Environment variable configuration
+   - Health check endpoints
+
+4. DOCKER & DEPLOYMENT:
+   - Multi-stage Dockerfile optimized for production
+   - Docker Compose configuration
+   - Environment variables
+   - Volume mounts for development
+
+5. DEPENDENCIES & PACKAGES:
+   - All required npm/pip/go.mod/Maven packages
+   - Version specifications
+
+Return detailed JSON with complete, copy-paste-ready code.`;
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt,
@@ -437,6 +468,7 @@ AIServiceGenerator.propTypes = {
     description: PropTypes.string.isRequired,
     category: PropTypes.string.isRequired
   }).isRequired,
+  industryContext: PropTypes.object,
   onComplete: PropTypes.func.isRequired,
   onSkip: PropTypes.func.isRequired
 };
