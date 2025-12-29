@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { base44 } from "@/api/base44Client";
 import { 
   Plus, 
@@ -14,10 +16,13 @@ import {
   Trash2, 
   Clock,
   GitBranch,
-  Zap
+  Zap,
+  Settings,
+  AlertCircle
 } from "lucide-react";
 import { toast } from "sonner";
 import PropTypes from "prop-types";
+import WorkflowExecutor from "./WorkflowExecutor";
 
 export default function WorkflowBuilder({ project, installedAgents = [] }) {
   const [workflow, setWorkflow] = useState({
@@ -27,7 +32,8 @@ export default function WorkflowBuilder({ project, installedAgents = [] }) {
     trigger: "manual"
   });
   const [isSaving, setIsSaving] = useState(false);
-  const [isRunning, setIsRunning] = useState(false);
+  const [showExecutor, setShowExecutor] = useState(false);
+  const [editingAgent, setEditingAgent] = useState(null);
 
   const addAgent = useCallback((agent) => {
     setWorkflow(prev => ({
@@ -40,9 +46,22 @@ export default function WorkflowBuilder({ project, installedAgents = [] }) {
           agent_icon: agent.icon,
           order: prev.agents.length,
           config: agent.default_config || {},
-          depends_on: []
+          depends_on: [],
+          condition: "",
+          on_error: "stop",
+          max_retries: 2,
+          use_internet_context: true
         }
       ]
+    }));
+  }, []);
+
+  const updateAgent = useCallback((index, updates) => {
+    setWorkflow(prev => ({
+      ...prev,
+      agents: prev.agents.map((agent, i) => 
+        i === index ? { ...agent, ...updates } : agent
+      )
     }));
   }, []);
 
@@ -87,51 +106,32 @@ export default function WorkflowBuilder({ project, installedAgents = [] }) {
     setIsSaving(false);
   };
 
-  const runWorkflow = async () => {
+  const openExecutor = () => {
     if (workflow.agents.length === 0) {
       toast.error("Add agents to run the workflow");
       return;
     }
-
-    setIsRunning(true);
-    toast.info("Executing workflow...");
-
-    try {
-      for (const agentStep of workflow.agents) {
-        const agentDef = installedAgents.find(a => a.id === agentStep.agent_id);
-        if (!agentDef) continue;
-
-        const result = await base44.integrations.Core.InvokeLLM({
-          prompt: `${agentDef.system_prompt}\n\nProject: ${project.name}\nTask: Analyze and provide recommendations.`,
-          add_context_from_internet: true,
-          response_json_schema: {
-            type: "object",
-            properties: {
-              recommendations: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    title: { type: "string" },
-                    description: { type: "string" },
-                    impact: { type: "string" }
-                  }
-                }
-              }
-            }
-          }
-        });
-
-        toast.success(`${agentDef.name} completed`);
-      }
-
-      toast.success("Workflow execution completed!");
-    } catch (error) {
-      console.error("Workflow execution error:", error);
-      toast.error("Workflow execution failed");
-    }
-    setIsRunning(false);
+    setShowExecutor(true);
   };
+
+  if (showExecutor) {
+    return (
+      <div className="space-y-4">
+        <Button
+          variant="outline"
+          onClick={() => setShowExecutor(false)}
+        >
+          ← Back to Builder
+        </Button>
+        <WorkflowExecutor
+          workflow={workflow}
+          project={project}
+          agents={installedAgents}
+          onComplete={() => setShowExecutor(false)}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="grid lg:grid-cols-3 gap-6">
@@ -228,7 +228,7 @@ export default function WorkflowBuilder({ project, installedAgents = [] }) {
                       className="relative"
                     >
                       <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
-                        <CardContent className="p-4">
+                        <CardContent className="p-4 space-y-3">
                           <div className="flex items-center gap-3">
                             <Badge className="bg-purple-600 text-white">
                               {index + 1}
@@ -240,6 +240,14 @@ export default function WorkflowBuilder({ project, installedAgents = [] }) {
                               </p>
                             </div>
                             <div className="flex gap-1">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setEditingAgent(editingAgent === index ? null : index)}
+                                className="h-7 w-7 p-0"
+                              >
+                                <Settings className="w-3 h-3" />
+                              </Button>
                               <Button
                                 size="sm"
                                 variant="ghost"
@@ -268,6 +276,56 @@ export default function WorkflowBuilder({ project, installedAgents = [] }) {
                               </Button>
                             </div>
                           </div>
+
+                          <AnimatePresence>
+                            {editingAgent === index && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                className="space-y-3 pt-3 border-t border-purple-200"
+                              >
+                                <div>
+                                  <Label className="text-xs">Condition (optional)</Label>
+                                  <Input
+                                    placeholder="e.g., output.score > 0.8"
+                                    value={agent.condition || ""}
+                                    onChange={(e) => updateAgent(index, { condition: e.target.value })}
+                                    className="text-xs h-8"
+                                  />
+                                </div>
+
+                                <div>
+                                  <Label className="text-xs">On Error</Label>
+                                  <Select
+                                    value={agent.on_error}
+                                    onValueChange={(value) => updateAgent(index, { on_error: value })}
+                                  >
+                                    <SelectTrigger className="h-8 text-xs">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="stop">Stop workflow</SelectItem>
+                                      <SelectItem value="continue">Continue anyway</SelectItem>
+                                      <SelectItem value="fallback">Use fallback</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+
+                                <div>
+                                  <Label className="text-xs">Max Retries</Label>
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    max="5"
+                                    value={agent.max_retries || 2}
+                                    onChange={(e) => updateAgent(index, { max_retries: parseInt(e.target.value) })}
+                                    className="text-xs h-8"
+                                  />
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </CardContent>
                       </Card>
                       {index < workflow.agents.length - 1 && (
@@ -285,18 +343,12 @@ export default function WorkflowBuilder({ project, installedAgents = [] }) {
           {/* Actions */}
           <div className="flex gap-2">
             <Button
-              onClick={runWorkflow}
-              disabled={isRunning || workflow.agents.length === 0}
+              onClick={openExecutor}
+              disabled={workflow.agents.length === 0}
               className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 text-white"
             >
-              {isRunning ? (
-                <>Running...</>
-              ) : (
-                <>
-                  <Play className="w-4 h-4 mr-2" />
-                  Run Now
-                </>
-              )}
+              <Play className="w-4 h-4 mr-2" />
+              Execute Workflow
             </Button>
             <Button
               onClick={saveWorkflow}
