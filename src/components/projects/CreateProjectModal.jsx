@@ -18,6 +18,7 @@ import { Sparkles, Loader2, TrendingUp, Zap, ArrowRight } from "lucide-react";
 import PropTypes from "prop-types";
 import { autoOnboardProject } from "./AIProjectOnboarding";
 import AIServiceGenerator from "./AIServiceGenerator";
+import IndustryTemplateGenerator from "./IndustryTemplateGenerator";
 
 const categories = [
   { value: "desktop", label: "Desktop Application", icon: "🖥️" },
@@ -61,6 +62,7 @@ function CreateProjectModal({ isOpen, onClose, onSubmit }) {
   const [selectedProjectTemplate, setSelectedProjectTemplate] = useState(null);
   const [enableAIOnboarding, setEnableAIOnboarding] = useState(true);
   const [aiGeneratedServices, setAiGeneratedServices] = useState([]);
+  const [industryTemplate, setIndustryTemplate] = useState(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -266,12 +268,17 @@ function CreateProjectModal({ isOpen, onClose, onSubmit }) {
     }
   };
 
-  const handleContinueToAIGeneration = () => {
+  const handleContinueToIndustry = () => {
     if (!formData.name || !formData.description || !formData.category) {
       alert("Please fill in required fields (name, description, category)");
       return;
     }
     setStep(2);
+  };
+
+  const handleIndustryComplete = (industryData) => {
+    setIndustryTemplate(industryData);
+    setStep(3);
   };
 
   const handleAIServicesComplete = (services) => {
@@ -285,7 +292,7 @@ function CreateProjectModal({ isOpen, onClose, onSubmit }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    handleContinueToAIGeneration();
+    handleContinueToIndustry();
   };
 
   const handleFinalSubmit = async (aiServices) => {
@@ -294,6 +301,18 @@ function CreateProjectModal({ isOpen, onClose, onSubmit }) {
     const selectedCategory = categories.find(c => c.value === formData.category);
     
     try {
+      // If industry template exists, use its services
+      const finalServices = industryTemplate?.template?.services 
+        ? industryTemplate.template.services.map(s => ({
+            name: s.name,
+            purpose: s.purpose,
+            category: s.category,
+            technology: s.technology,
+            database_schema: s.database_schema,
+            api_endpoints: s.api_endpoints
+          }))
+        : aiServices;
+
       await onSubmit({
         ...formData,
         icon: formData.icon || selectedCategory?.icon || "🏗️",
@@ -301,7 +320,8 @@ function CreateProjectModal({ isOpen, onClose, onSubmit }) {
         projectTemplateId: selectedProjectTemplate?.id,
         templateConfig: selectedProjectTemplate,
         enableAIOnboarding,
-        aiGeneratedServices: aiServices
+        aiGeneratedServices: finalServices,
+        industryTemplate: industryTemplate
       });
       
       // Reset form
@@ -320,6 +340,7 @@ function CreateProjectModal({ isOpen, onClose, onSubmit }) {
       setSuggestedServices([]);
       setSelectedProjectTemplate(null);
       setAiGeneratedServices([]);
+      setIndustryTemplate(null);
       setStep(1);
       onClose();
     } catch (error) {
@@ -344,7 +365,7 @@ function CreateProjectModal({ isOpen, onClose, onSubmit }) {
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent flex items-center gap-2">
             <Sparkles className="w-6 h-6 text-purple-600" />
-            {step === 1 ? "Create New Project" : "AI Service Generation"}
+            {step === 1 ? "Create New Project" : step === 2 ? "Industry Specialization" : "AI Service Generation"}
           </DialogTitle>
         </DialogHeader>
 
@@ -714,20 +735,33 @@ function CreateProjectModal({ isOpen, onClose, onSubmit }) {
               type="submit"
               className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white"
             >
-              Continue to AI Generation
+              Continue to Industry Setup
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </div>
         </motion.form>
-          ) : (
+          ) : step === 2 ? (
             <motion.div
               key="step2"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
             >
+              <IndustryTemplateGenerator
+                projectData={formData}
+                onComplete={handleIndustryComplete}
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="step3"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+            >
               <AIServiceGenerator
                 projectData={formData}
+                industryContext={industryTemplate}
                 onComplete={handleAIServicesComplete}
                 onSkip={handleAIServicesSkip}
               />
