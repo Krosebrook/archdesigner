@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   Network, 
   Plus, 
@@ -16,6 +17,9 @@ import {
 import { toast } from "sonner";
 import PropTypes from "prop-types";
 import VisualEditor from "../project-detail/VisualEditor";
+import { useAICoPilot } from "../ai-copilot/useAICoPilot";
+import AICoPilotPanel from "../ai-copilot/AICoPilotPanel";
+import AICoPilotToggle from "../ai-copilot/AICoPilotToggle";
 
 const COMMUNICATION_PATTERNS = [
   { value: "rest", label: "REST API", icon: "🌐", color: "bg-blue-500" },
@@ -31,6 +35,37 @@ export default function EnhancedVisualEditor({ project, services, onUpdateServic
   const [selectedPattern, setSelectedPattern] = useState("rest");
   const [connectionDescription, setConnectionDescription] = useState("");
   const [isGeneratingConnection, setIsGeneratingConnection] = useState(false);
+  const [coPilotOpen, setCoPilotOpen] = useState(false);
+
+  const {
+    suggestions,
+    isAnalyzing,
+    triggerAnalysis,
+    dismissSuggestion,
+    applySuggestion
+  } = useAICoPilot({ project, services });
+
+  // Trigger analysis when services change
+  useEffect(() => {
+    if (services.length > 0) {
+      triggerAnalysis({
+        action: "visual_editor_view",
+        serviceCount: services.length,
+        services: services.map(s => ({ 
+          name: s.name, 
+          category: s.category, 
+          apis: s.apis?.length || 0,
+          dependencies: s.depends_on?.length || 0
+        }))
+      });
+    }
+  }, [services.length, triggerAnalysis]);
+
+  const handleApplySuggestion = async (suggestion) => {
+    const applied = await applySuggestion(suggestion);
+    toast.success(`Applied: ${applied.title}`);
+    triggerAnalysis({ action: "suggestion_applied", suggestion: applied });
+  };
 
   const handleDefineConnection = async () => {
     if (!connectionDescription.trim()) {
@@ -176,8 +211,45 @@ Return as structured JSON.`;
   };
 
   return (
-    <div className="space-y-6">
-      <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
+    <div className="relative">
+      {/* AI Co-Pilot Sidebar */}
+      <AnimatePresence>
+        {coPilotOpen && (
+          <motion.div
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="fixed top-0 right-0 w-96 h-full bg-white shadow-2xl z-50 border-l border-gray-200"
+          >
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setCoPilotOpen(false)}
+              className="absolute top-4 right-4 z-10"
+            >
+              ✕
+            </Button>
+            <AICoPilotPanel
+              suggestions={suggestions}
+              isAnalyzing={isAnalyzing}
+              onDismiss={dismissSuggestion}
+              onApply={handleApplySuggestion}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Floating Co-Pilot Toggle */}
+      <AICoPilotToggle
+        isOpen={coPilotOpen}
+        onToggle={() => setCoPilotOpen(!coPilotOpen)}
+        suggestionCount={suggestions.length}
+        isAnalyzing={isAnalyzing}
+      />
+
+      <div className="space-y-6">
+        <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-blue-900">
             <Network className="w-6 h-6" />
@@ -277,12 +349,13 @@ Return as structured JSON.`;
         </CardContent>
       </Card>
 
-      {/* Original Visual Editor */}
-      <VisualEditor
-        services={services}
-        onUpdateService={onUpdateService}
-        onDeleteService={onDeleteService}
-      />
+        {/* Original Visual Editor */}
+        <VisualEditor
+          services={services}
+          onUpdateService={onUpdateService}
+          onDeleteService={onDeleteService}
+        />
+      </div>
     </div>
   );
 }
