@@ -7,6 +7,7 @@ import Home from './pages/Home';
 import ProjectDetail from './pages/ProjectDetail';
 import Projects from './pages/Projects';
 import Settings from './pages/Settings';
+import Documentation from './pages/Documentation';
 import __Layout from './Layout.jsx';
 
 
@@ -20,6 +21,7 @@ export const PAGES = {
     "ProjectDetail": ProjectDetail,
     "Projects": Projects,
     "Settings": Settings,
+    "Documentation": Documentation,
 }
 
 export const pagesConfig = {
