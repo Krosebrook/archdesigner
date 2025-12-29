@@ -34,13 +34,136 @@ export default function ProjectsPage() {
 
   const handleCreateProject = async (projectData) => {
     try {
-      const { selectedTemplates, projectTemplateId, templateConfig, enableAIOnboarding, aiGeneratedServices, ...projectFields } = projectData;
+      const { selectedTemplates, projectTemplateId, templateConfig, enableAIOnboarding, aiGeneratedServices, industryTemplate, ...projectFields } = projectData;
       
       // Create project
       const newProject = await base44.entities.Project.create(projectFields);
       
-      // Run AI onboarding if enabled and no template selected
-      if (enableAIOnboarding && !templateConfig && selectedTemplates.length === 0) {
+      // Handle industry-specific scaffolding
+      if (industryTemplate?.template) {
+        const template = industryTemplate.template;
+        
+        // Generate CI/CD with compliance checks
+        if (template.cicd_pipeline) {
+          await base44.entities.CICDConfiguration.create({
+            project_id: newProject.id,
+            platform: template.cicd_pipeline.deployment_strategy || "github_actions",
+            deployment_targets: [{
+              name: "production",
+              type: "kubernetes",
+              environment: "production"
+            }],
+            pipeline_stages: template.cicd_pipeline.testing_stages ? {
+              linting: { enabled: true, tools: ["eslint"] },
+              testing: { enabled: true, unit_tests: true, integration_tests: true },
+              security_scanning: {
+                enabled: true,
+                dependency_scan: true,
+                sast: true,
+                container_scan: true
+              },
+              build: { enabled: true, docker: true },
+              deploy: { enabled: true, auto_staging: true, manual_production: true }
+            } : {},
+            security_scan_config: {
+              enabled: true,
+              sast_tools: template.cicd_pipeline.security_scans || ["sonarqube"],
+              dependency_scan: true,
+              container_scan: true
+            }
+          });
+        }
+
+        // Create services with full scaffolding
+        if (template.services) {
+          const servicePromises = template.services.map(async (serviceConfig) => {
+            const service = await base44.entities.Service.create({
+              project_id: newProject.id,
+              name: serviceConfig.name,
+              description: serviceConfig.purpose,
+              category: serviceConfig.category,
+              technologies: [serviceConfig.technology],
+              apis: serviceConfig.api_endpoints?.map(ep => ({
+                method: ep.method || "GET",
+                path: ep.path || `/${serviceConfig.name.toLowerCase()}`,
+                description: ep.description
+              })) || [],
+              database_schema: serviceConfig.database_schema,
+              position: { x: Math.random() * 400 + 100, y: Math.random() * 300 + 100 }
+            });
+
+            // Generate documentation for service
+            await base44.entities.Documentation.create({
+              project_id: newProject.id,
+              service_id: service.id,
+              doc_type: "api",
+              content: `# ${serviceConfig.name} API Documentation
+
+## Overview
+${serviceConfig.purpose}
+
+## Technology Stack
+- **Primary**: ${serviceConfig.technology}
+- **Database**: ${serviceConfig.database_type}
+
+## Security Requirements
+${serviceConfig.security_requirements?.map(req => `- ${req}`).join('\n') || 'Standard authentication required'}
+
+## Compliance Notes
+${serviceConfig.compliance_notes || 'See project-level compliance requirements'}
+
+## API Endpoints
+${serviceConfig.api_endpoints?.map(ep => `
+### ${ep.method} ${ep.path}
+${ep.description || ''}
+`).join('\n') || 'No endpoints defined yet'}
+
+## Database Schema
+${JSON.stringify(serviceConfig.database_schema, null, 2)}
+`
+            });
+
+            return service;
+          });
+
+          await Promise.all(servicePromises);
+        }
+
+        // Generate compliance documentation
+        if (template.security_compliance) {
+          await base44.entities.Documentation.create({
+            project_id: newProject.id,
+            doc_type: "status",
+            content: `# Security & Compliance Documentation
+
+## Authentication Strategy
+${template.security_compliance.authentication}
+
+## Data Encryption
+${template.security_compliance.encryption}
+
+## Audit Requirements
+${template.security_compliance.audit_requirements?.map(req => `- ${req}`).join('\n') || 'No specific requirements'}
+
+## Required Certifications
+${template.security_compliance.certifications?.map(cert => `- ${cert}`).join('\n') || 'No certifications required'}
+
+## Database Architecture
+- **Encryption**: ${template.database_architecture?.encryption || 'AES-256'}
+- **Audit Logging**: ${template.database_architecture?.audit_logging || 'Enabled'}
+- **Backup Policy**: ${template.database_architecture?.backup_policy || 'Daily backups with 30-day retention'}
+`
+          });
+        }
+
+        // Update project counts
+        await base44.entities.Project.update(newProject.id, {
+          services_count: template.services?.length || 0
+        });
+      }
+      
+      // Run AI onboarding if enabled and no industry template
+      if (enableAIOnboarding && !industryTemplate && !templateConfig && selectedTemplates.length === 0) {
         const { autoOnboardProject } = await import("../components/projects/AIProjectOnboarding");
         await autoOnboardProject(newProject);
         setShowCreateModal(false);
