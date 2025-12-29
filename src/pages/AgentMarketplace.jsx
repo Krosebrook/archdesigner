@@ -24,6 +24,7 @@ import { toast } from "sonner";
 
 import AgentCard from "../components/agent-marketplace/AgentCard";
 import WorkflowBuilder from "../components/agent-marketplace/WorkflowBuilder";
+import AgentBuilder from "../components/agent-marketplace/AgentBuilder";
 
 const CATEGORIES = [
   { id: "all", label: "All Agents", icon: Sparkles },
@@ -225,7 +226,9 @@ export default function AgentMarketplacePage() {
     const matchesSearch = agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          agent.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          agent.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesCategory = categoryFilter === "all" || agent.category === categoryFilter;
+    const matchesCategory = categoryFilter === "all" || 
+                           agent.category === categoryFilter ||
+                           (categoryFilter === "specialty" && !["frontend", "backend", "database", "security", "performance", "devops", "testing", "documentation"].includes(agent.category));
     return matchesSearch && matchesCategory;
   });
 
