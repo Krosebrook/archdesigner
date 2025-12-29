@@ -47,6 +47,11 @@ const navigationItems = [
     url: createPageUrl("Agents"),
     icon: Bot,
   },
+  {
+    title: "Agent Marketplace",
+    url: createPageUrl("AgentMarketplace"),
+    icon: Zap,
+  },
 ];
 
 function Layout({ children }) {

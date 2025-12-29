@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import ProjectDetail from './pages/ProjectDetail';
 import Projects from './pages/Projects';
 import Settings from './pages/Settings';
+import AgentMarketplace from './pages/AgentMarketplace';
 import __Layout from './Layout.jsx';
 
 
@@ -18,6 +19,7 @@ export const PAGES = {
     "ProjectDetail": ProjectDetail,
     "Projects": Projects,
     "Settings": Settings,
+    "AgentMarketplace": AgentMarketplace,
 }
 
 export const pagesConfig = {
