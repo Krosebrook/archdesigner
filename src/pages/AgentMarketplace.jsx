@@ -26,6 +26,7 @@ import AgentBuilder from "../components/agent-marketplace/AgentBuilder";
 
 const CATEGORIES = [
   { id: "all", label: "All Agents", icon: Sparkles },
+  { id: "orchestration", label: "Orchestration", icon: GitBranch },
   { id: "frontend", label: "Frontend", icon: Code2 },
   { id: "backend", label: "Backend", icon: Code2 },
   { id: "database", label: "Database", icon: Database },
@@ -954,6 +955,98 @@ const OFFICIAL_AGENTS = [
     rating: 4.8,
     installs_count: 2456,
     tags: ["seo", "performance", "web-vitals", "optimization"]
+  },
+
+  // Orchestration & Control Agents (5)
+  {
+    name: "Workflow Orchestrator",
+    slug: "workflow-orchestrator",
+    description: "Coordinates multi-agent workflows, manages dependencies, handles conditional branching, and ensures optimal execution order",
+    category: "orchestration",
+    icon: "🎯",
+    color: "#8b5cf6",
+    specialization: "Multi-Agent Coordination",
+    capabilities: ["Workflow planning", "Dependency resolution", "Conditional logic", "Parallel execution", "Error recovery"],
+    system_prompt: "You are a workflow orchestration expert coordinating complex multi-agent processes with optimal execution strategies...",
+    configuration_schema: {},
+    default_config: {},
+    is_public: true,
+    is_official: true,
+    rating: 4.9,
+    installs_count: 3456,
+    tags: ["orchestration", "workflow", "coordination", "automation"]
+  },
+  {
+    name: "Agent Performance Monitor",
+    slug: "agent-monitor",
+    description: "Monitors agent execution metrics, tracks success rates, identifies bottlenecks, and provides real-time performance insights",
+    category: "orchestration",
+    icon: "📊",
+    color: "#06b6d4",
+    specialization: "Agent Analytics & Monitoring",
+    capabilities: ["Real-time monitoring", "Performance metrics", "Bottleneck detection", "Success tracking", "Alert configuration"],
+    system_prompt: "You are an agent monitoring expert tracking performance, identifying issues, and optimizing agent execution...",
+    configuration_schema: {},
+    default_config: {},
+    is_public: true,
+    is_official: true,
+    rating: 4.8,
+    installs_count: 2987,
+    tags: ["monitoring", "analytics", "performance", "observability"]
+  },
+  {
+    name: "Smart Agent Router",
+    slug: "smart-router",
+    description: "Intelligently routes tasks to the most appropriate agents based on context, workload, and specialization",
+    category: "orchestration",
+    icon: "🧭",
+    color: "#f59e0b",
+    specialization: "Intelligent Task Routing",
+    capabilities: ["Context analysis", "Agent selection", "Load balancing", "Skill matching", "Priority routing"],
+    system_prompt: "You are an intelligent routing expert analyzing tasks and selecting optimal agents for execution...",
+    configuration_schema: {},
+    default_config: {},
+    is_public: true,
+    is_official: true,
+    rating: 4.9,
+    installs_count: 3234,
+    tags: ["routing", "load-balancing", "optimization", "ai"]
+  },
+  {
+    name: "Workflow Optimizer",
+    slug: "workflow-optimizer",
+    description: "Analyzes workflow patterns, suggests optimizations, reduces redundancy, and improves execution efficiency",
+    category: "orchestration",
+    icon: "⚡",
+    color: "#10b981",
+    specialization: "Workflow Optimization",
+    capabilities: ["Pattern analysis", "Redundancy elimination", "Parallel optimization", "Cost reduction", "Speed improvements"],
+    system_prompt: "You are a workflow optimization expert identifying inefficiencies and suggesting improvements to agent workflows...",
+    configuration_schema: {},
+    default_config: {},
+    is_public: true,
+    is_official: true,
+    rating: 4.8,
+    installs_count: 2765,
+    tags: ["optimization", "efficiency", "workflow", "analysis"]
+  },
+  {
+    name: "Error Recovery Specialist",
+    slug: "error-recovery",
+    description: "Handles workflow failures, implements retry strategies, provides fallback options, and ensures graceful degradation",
+    category: "orchestration",
+    icon: "🛡️",
+    color: "#ef4444",
+    specialization: "Resilience & Recovery",
+    capabilities: ["Error detection", "Retry strategies", "Fallback routing", "State recovery", "Circuit breaking"],
+    system_prompt: "You are an error recovery expert ensuring workflows handle failures gracefully with intelligent retry and fallback strategies...",
+    configuration_schema: {},
+    default_config: {},
+    is_public: true,
+    is_official: true,
+    rating: 4.9,
+    installs_count: 3123,
+    tags: ["error-handling", "recovery", "resilience", "reliability"]
   }
 ];
 
@@ -1031,7 +1124,7 @@ export default function AgentMarketplacePage() {
                          agent.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesCategory = categoryFilter === "all" || 
                            agent.category === categoryFilter ||
-                           (categoryFilter === "specialty" && !["frontend", "backend", "database", "security", "performance", "devops", "testing", "documentation"].includes(agent.category));
+                           (categoryFilter === "specialty" && !["orchestration", "frontend", "backend", "database", "security", "performance", "devops", "testing", "documentation"].includes(agent.category));
     return matchesSearch && matchesCategory;
   });
 
@@ -1061,8 +1154,8 @@ export default function AgentMarketplacePage() {
               AI Agent Marketplace
             </h1>
             <p className="text-lg text-white/90 max-w-2xl">
-              Discover 50+ specialized AI co-pilots for every aspect of development. 
-              Chain agents together to create powerful automated workflows.
+              Discover 55+ specialized AI co-pilots including orchestration agents for workflow coordination. 
+              Chain agents together to create powerful automated workflows with intelligent routing and monitoring.
             </p>
             <div className="flex gap-4 mt-6">
               <Badge className="bg-white/20 text-white border-white/30 backdrop-blur">
