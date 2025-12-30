@@ -428,6 +428,8 @@ auditLog(logger, 'LLM_INVOCATION', user, {
 
 ### Pricing (Approximate)
 
+**Note**: Prices are approximate and subject to change. Last verified: December 2024. Check provider websites for current pricing.
+
 | Model | Input (per 1M tokens) | Output (per 1M tokens) | Context Window |
 |-------|----------------------|------------------------|----------------|
 | Gemini 1.5 Flash | $0.075 | $0.30 | 1M |

@@ -4,6 +4,9 @@
 
 ArchDesigner employs a sophisticated multi-agent AI system built on advanced Chain-of-Thought (CoT) reasoning patterns. Each agent is a specialized serverless function that performs specific tasks with high accuracy, transparency, and security.
 
+**What is Chain-of-Thought (CoT) Reasoning?**  
+Chain-of-Thought is an AI prompting technique where the model explicitly breaks down complex problems into step-by-step reasoning stages. Instead of jumping directly to an answer, the AI "shows its work" by progressing through logical stages (input gathering → analysis → problem identification → recommendations → output). This leads to more accurate, transparent, and debuggable AI decisions.
+
 **Last Updated**: December 29, 2024  
 **Version**: 0.0.0
 

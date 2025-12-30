@@ -5,7 +5,7 @@
 ArchDesigner integrates with Claude (by Anthropic) through the Base44 SDK's LLM abstraction layer. Claude powers the AI agent system with advanced reasoning capabilities, particularly excelling at Chain-of-Thought (CoT) reasoning and structured output generation.
 
 **Provider**: Anthropic  
-**Model Family**: Claude (Claude 3 family)  
+**Model Family**: Claude (Claude 3 and 3.5 families)  
 **Integration Method**: Base44 SDK LLM abstraction  
 **Version**: 0.0.0  
 **Last Updated**: December 29, 2024
@@ -597,13 +597,14 @@ logger.metric('claude_invocation', executionTime, {
 
 ## Model Comparison
 
-### Claude 3 Family
+### Claude 3 and 3.5 Family
 
 | Model | Best For | Speed | Cost | Context |
 |-------|----------|-------|------|---------|
-| **Opus** | Complex reasoning, critical decisions | Slower | High | 200K |
-| **Sonnet** | Standard tasks, balanced performance | Medium | Medium | 200K |
-| **Haiku** | Quick scans, simple analysis | Fast | Low | 200K |
+| **Claude 3.5 Sonnet** | Advanced tasks, best quality-to-cost ratio | Medium | Medium | 200K |
+| **Claude 3 Opus** | Complex reasoning, critical decisions | Slower | High | 200K |
+| **Claude 3 Sonnet** | Standard tasks, balanced performance | Medium | Medium | 200K |
+| **Claude 3 Haiku** | Quick scans, simple analysis | Fast | Low | 200K |
 
 ### When to Use Each
 

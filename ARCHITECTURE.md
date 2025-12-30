@@ -374,7 +374,7 @@ const buttonVariants = cva(
 ```
 Deno 1.40+
 ├── TypeScript 5.8.2
-├── Base44 SDK 0.8.4
+├── Base44 SDK 0.8.3-0.8.4
 └── Serverless Functions
 ```
 
