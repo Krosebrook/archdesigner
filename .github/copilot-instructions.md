@@ -464,7 +464,7 @@ npm run dev
 **Known Constraints**:
 - ⚠️ **Limited test infrastructure**: Only 1 test file exists (`functions/lib/utils.test.ts`)
 - ⚠️ **JavaScript frontend**: No TypeScript in frontend (backend uses TypeScript)
-- ⚠️ **8 security vulnerabilities**: Known npm audit issues (6 moderate, 2 high)
+- ⚠️ **Security vulnerabilities**: Known npm audit issues - run `npm audit` for current status
 - ⚠️ **ESLint not in PATH**: May need `npx eslint` or install globally
 
 **Build Commands**:
@@ -479,7 +479,7 @@ npm run preview   # Preview production build
 
 **Required Reading** (check these first):
 - `.github/copilot-instructions.md` (this file)
-- `PRD.md` (comprehensive product requirements - 835 lines)
+- `PRD.md` (comprehensive product requirements document)
 - `ROADMAP.md` (feature roadmap with timeline)
 - `TECHNICAL_AUDIT.md` (technical audit summary)
 - `ARCHITECTURE.md` (architecture documentation)
@@ -511,18 +511,16 @@ archdesigner/
 ```
 
 **Helpful Context**:
-- **Pages**: 11 main pages (Dashboard, Projects, Visual Editor, Service Map, etc.)
-- **Components**: 216+ JSX components organized by feature
+- **Pages**: Multiple main pages (Dashboard, Projects, Visual Editor, Service Map, etc.)
+- **Components**: 200+ JSX components organized by feature (29 feature directories)
 - **Backend Functions**: 10 specialized AI agents with CoT reasoning
 - **Focus**: AI-powered microservices architecture design and management
 - **Platform**: Built on Base44 (serverless platform)
 
-**Project Stats**:
-- Total Files: ~250
-- Lines of Code: ~15,000+
-- Frontend Components: 216 JSX files
-- Backend Functions: 10 TypeScript files
-- Overall Health Score: 82/100
+**Project Stats** (use file system tools for current counts):
+- Frontend Components: Extensive component library in `src/components/`
+- Backend Functions: 10 TypeScript serverless functions in `functions/`
+- Overall Health Score: 82/100 (see AUDIT_SUMMARY.md for latest)
 - Maintainability Score: 63/100
 
 **Architecture Highlights**:
