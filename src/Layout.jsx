@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Building2, BarChart3, Layers3, Zap, Bot } from "lucide-react";
+import { Building2, BarChart3, Layers3, Zap, Bot, Code } from "lucide-react";
 import { motion } from "framer-motion";
 import PropTypes from "prop-types";
 import PWAInstaller from "./components/shared/PWAInstaller";
@@ -51,6 +51,11 @@ const navigationItems = [
     title: "Agent Marketplace",
     url: createPageUrl("AgentMarketplace"),
     icon: Zap,
+  },
+  {
+    title: "SDKs & CLI",
+    url: createPageUrl("SDKDocumentation"),
+    icon: Code,
   },
 ];
 
