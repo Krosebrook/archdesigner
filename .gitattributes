@@ -1,0 +1,8 @@
+node_modules/ export-ignore
+dist/ export-ignore
+.next/ export-ignore
+__pycache__/ export-ignore
+.cache/ export-ignore
+.turbo/ export-ignore
+coverage/ export-ignore
+.nyc_output/ export-ignore

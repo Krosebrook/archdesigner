@@ -77,26 +77,34 @@ ArchDesigner is a comprehensive, AI-powered platform for designing, validating, 
 
 ## 📖 Documentation
 
-### For Users
+### Getting Started
 
-- **[README.md](./README.md)** - This file: Getting started and overview
-- **[CHANGELOG.md](./CHANGELOG.md)** - 🆕 Version history and release notes
+- **[README.md](./README.md)** - This file: Overview and quick start guide
+- **[CHANGELOG.md](./CHANGELOG.md)** - Version history and release notes
+- **[CONTRIBUTING.md](./CONTRIBUTING.md)** - Complete contribution guidelines for developers
+
+### Development Guides
+
+- **[DEBUG_GUIDE.md](./DEBUG_GUIDE.md)** - 🆕 Comprehensive debugging, bug identification, and issue resolution
+- **[REFACTORING_GUIDE.md](./REFACTORING_GUIDE.md)** - 🆕 Code improvement strategies and best practices
+- **[TESTING_STRATEGY.md](./TESTING_STRATEGY.md)** - 🆕 Complete testing framework (unit, integration, E2E)
+- **[DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)** - 🆕 Production deployment and operations manual
+- **[SECURITY_GUIDE.md](./SECURITY_GUIDE.md)** - 🆕 Security standards, OWASP compliance, and best practices
+
+### Architecture & Technical
+
+- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - System architecture and design patterns
+- **[TECHNICAL_AUDIT.md](./TECHNICAL_AUDIT.md)** - Technical codebase audit and analysis
+- **[agents.md](./agents.md)** - AI Agent System with Chain-of-Thought reasoning
+- **[claude.md](./claude.md)** - Claude (Anthropic) LLM integration guide
+- **[gemini.md](./gemini.md)** - Gemini (Google) LLM integration guide
+
+### Product & Planning
+
 - **[PRD.md](./PRD.md)** - Product Requirements Document with complete feature analysis
 - **[ROADMAP.md](./ROADMAP.md)** - Detailed feature roadmap with quarterly timeline
-
-### For Developers
-
-- **[CONTRIBUTING.md](./CONTRIBUTING.md)** - Contribution guidelines (coming soon)
-- **[TECHNICAL_AUDIT.md](./TECHNICAL_AUDIT.md)** - Technical codebase audit and architecture
-- **[agents.md](./agents.md)** - 🆕 AI Agent System documentation
-- **[claude.md](./claude.md)** - 🆕 Claude (Anthropic) integration guide
-- **[gemini.md](./gemini.md)** - 🆕 Gemini (Google) integration guide
-
-### For Stakeholders
-
+- **[RECOMMENDATIONS.md](./RECOMMENDATIONS.md)** - Comprehensive improvement recommendations
 - **[AUDIT_SUMMARY.md](./AUDIT_SUMMARY.md)** - Executive summary of audit findings
-- **[RECOMMENDATIONS.md](./RECOMMENDATIONS.md)** - Comprehensive audit recommendations and best practices
-- **[RECOMMENDATIONS_EXECUTIVE_SUMMARY.md](./RECOMMENDATIONS_EXECUTIVE_SUMMARY.md)** - Quick reference guide
 
 ---
 
