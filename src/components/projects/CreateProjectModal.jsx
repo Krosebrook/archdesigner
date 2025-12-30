@@ -17,7 +17,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Loader2, TrendingUp, Zap, ArrowRight } from "lucide-react";
 import PropTypes from "prop-types";
 import { autoOnboardProject } from "./AIProjectOnboarding";
-import AIServiceGenerator from "./AIServiceGenerator";
+import AIServiceGeneratorV2 from "./AIServiceGeneratorV2";
 import IndustryTemplateGenerator from "./IndustryTemplateGenerator";
 
 const categories = [
@@ -759,7 +759,7 @@ function CreateProjectModal({ isOpen, onClose, onSubmit }) {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
             >
-              <AIServiceGenerator
+              <AIServiceGeneratorV2
                 projectData={formData}
                 industryContext={industryTemplate}
                 onComplete={handleAIServicesComplete}
